@@ -1,0 +1,3 @@
+/home/barisayyildiz/test_code_raspberry/converter/CMakeFiles/test.dir
+/home/barisayyildiz/test_code_raspberry/converter/CMakeFiles/edit_cache.dir
+/home/barisayyildiz/test_code_raspberry/converter/CMakeFiles/rebuild_cache.dir
