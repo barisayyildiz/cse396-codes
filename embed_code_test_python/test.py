@@ -105,7 +105,7 @@ if image is not None:
         brp = (247.0,241.0)
         blp = (113.0,278.0)
         pts = np.array([tlp,trp,brp,blp])
-        image = four_point_transform(image, pts)
+        # image = four_point_transform(image, pts)
 
         # cv2.imshow('transformed Image' + str(i), image)
 
@@ -115,7 +115,7 @@ if image is not None:
         red_line = cv2.inRange(image, lowerb, upperb)
         ##red_line = cv2.resize(red_line, (60,80), interpolation = cv2.INTER_AREA)
 
-        # cv2.imshow("filtered" + str(i), red_line)
+        cv2.imshow("Red line", red_line)
 
         h,w = np.shape(red_line)
         backG = np.zeros((h, w))
@@ -152,7 +152,7 @@ if image is not None:
             r += 1
         
         # print("len(tempV) : ", len(tempV))
-        intv = 50
+        intv = 20
         intv = len(tempV)//intv
 
         # print("intv : ", intv)
