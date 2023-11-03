@@ -9,6 +9,9 @@
 #include <fstream>
 #include <sstream>
 
+#include <wiringPi.h>
+#include <chrono>
+
 using namespace cv;
 using namespace std;
 
@@ -18,6 +21,22 @@ const int out3 = 5;
 const int out4 = 12;
 const int buttonPin = 23;
 const int ledPin = 18;
+
+
+#define STEPPER_PIN_1 1
+#define STEPPER_PIN_2 7
+#define STEPPER_PIN_3 8
+#define STEPPER_PIN_4 25
+
+#define DELAY_ONE_STEP 30
+#define DELAY_MOVE 150
+
+#define STEP_SIZE 32
+
+#define DEGREE_PER_ROTATION 5.625
+
+int step_number = 0;
+int counter = 0;
 
 class Vertex {
     public:
@@ -107,7 +126,92 @@ cv::Mat fourPointTransform(cv::Mat image, std::vector<cv::Point2f> pts) {
     return warped;
 }
 
+void oneStep(bool direction){
+    // std::cout << "counter : " << ++counter << std::endl;
+    if(direction){
+    switch(step_number){
+      case 0:
+      digitalWrite(STEPPER_PIN_1, HIGH);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+      case 1:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, HIGH);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+      case 2:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, HIGH);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+      case 3:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, HIGH);
+      break;
+    }
+  }
+  else{
+    switch(step_number){
+      case 0:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, HIGH);
+      break;
+      case 1:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, HIGH);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+      case 2:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, HIGH);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+      case 3:
+      digitalWrite(STEPPER_PIN_1, HIGH);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+    }
+  }
+  step_number++;
+  if(step_number > 3){
+    step_number = 0;
+  }
+}
+
+void move(bool direction, int stepPrecision){
+    int precisionCounter = 0;
+    
+    while(precisionCounter < stepPrecision){
+        
+        oneStep(direction);
+        precisionCounter++;
+
+        delay(DELAY_ONE_STEP);
+    }
+
+    // delay(DELAY_MOVE);
+}
+
 int main() {
+
+    wiringPiSetupGpio();
+
+    pinMode(STEPPER_PIN_1, OUTPUT);
+    pinMode(STEPPER_PIN_2, OUTPUT);
+    pinMode(STEPPER_PIN_3, OUTPUT);
+    pinMode(STEPPER_PIN_4, OUTPUT);
 
     int i = 0;
     int numItt = 20;
@@ -118,19 +222,21 @@ int main() {
 
     vector<vector<Vertex>> meshPoints;
     vector<int> lineLength;
+    // double theta = 0.0;
 
-    // cv::VideoCapture cap(0);
-    // if (!cap.isOpened()) {
-    //     cout << "Error: Camera not found" << endl;
-    //     return 1;
-    // }
-
-    for(int i=0; i<2; i++) {
+    for(; theta<360; ) {
+        cv::VideoCapture cap(0);
+        if (!cap.isOpened()) {
+            cout << "Error: Camera not found" << endl;
+            return 1;
+        }
         cv::Mat img;
-        // cap >> img;
-        // cap.release();
+        cap >> img;
+        cap.release();
 
-        img = cv::imread("test_image.jpg");
+        delay(1000);
+
+        // img = cv::imread("test_image.jpg");
 
         // std::cout << img.rows << "," << img.cols << std::endl;
 
@@ -144,16 +250,16 @@ int main() {
 
         Mat red_line;
         // B, G, R
-        Scalar lowerb(0, 0, 170);
+        Scalar lowerb(220, 220, 220);
         Scalar upperb(255, 255, 255);
         cv::inRange(img, lowerb, upperb, red_line);
         
         // Create windows and display images
         // cv::namedWindow("Original Image", cv::WINDOW_NORMAL);
-        cv::imshow("Original Image", img);
+        // cv::imshow("Original Image", img);
 
         // cv::namedWindow("Red Line Image", cv::WINDOW_NORMAL);
-        cv::imshow("Red Line Image", red_line);
+        // cv::imshow("Red Line Image", red_line);
 
         Mat backG;
         int bottomR = 0;
@@ -168,7 +274,7 @@ int main() {
 
         backG = Mat::zeros(h, w, CV_32F);
 
-        cv::imshow("background", backG);
+        // cv::imshow("background", backG);
 
         cv::Mat modified = backG.clone();
 
@@ -183,7 +289,7 @@ int main() {
             }
         }
 
-        cv::imshow("background2", backG);
+        // cv::imshow("background2", backG);
         
         int centerC = 420; // center column
 
@@ -221,6 +327,14 @@ int main() {
             meshPoints.push_back(V);
             lineLength.push_back(-1 * V.size());
         }
+
+        std::cout << "theta: " << theta << std::endl;
+        std::cout << "meshPoints length: " << meshPoints.size() << std::endl << std::endl;
+
+        delay(150);
+        move(true, STEP_SIZE);
+
+        theta = theta+DEGREE_PER_ROTATION;
 
         // // theta += thetaInc;
         // // // Step the motor
@@ -315,7 +429,7 @@ int main() {
         std::cerr << "Error: Unable to open file for writing." << std::endl;
     }
 
-    cv::waitKey(0);
+    // cv::waitKey(0);
     
 
     return 0;
