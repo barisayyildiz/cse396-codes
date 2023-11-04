@@ -28,12 +28,10 @@ const int ledPin = 18;
 #define STEPPER_PIN_3 8
 #define STEPPER_PIN_4 25
 
-#define DELAY_ONE_STEP 30
+#define DELAY_ONE_STEP 3
 #define DELAY_MOVE 150
 
-#define STEP_SIZE 32
-
-#define DEGREE_PER_ROTATION 5.625
+#define STEP_PER_MOVEMENT 64
 
 int step_number = 0;
 int counter = 0;
@@ -224,7 +222,10 @@ int main() {
     vector<int> lineLength;
     // double theta = 0.0;
 
-    for(int i=0; i<3; i++) {
+    int counter = 0;
+
+    auto t_start = std::chrono::high_resolution_clock::now();
+    for(int i=0; theta<360; i++) {
         cv::VideoCapture cap(0);
         if (!cap.isOpened()) {
             cout << "Error: Camera not found" << endl;
@@ -234,27 +235,32 @@ int main() {
         cap >> img;
         cap.release();
 
-        if(!cv::imwrite("test.jpg", img)) {
-            std::cerr << "an error occured\n";
-        }
-
-        delay(200);
+        // cv::imshow("original image", img);
+        // std::cout << img.rows << ", " << img.cols << std::endl;
 
         // img = cv::imread("test_image.jpg");
 
         // std::cout << img.rows << "," << img.cols << std::endl;
 
         Point2f pts[4];
-        pts[0] = { 0.0, 0.0 };
-        pts[1] = { 800.0, 0.0 };
-        pts[2] = { 800.0, 800.0 };
-        pts[3] = { 0.0, 800.0 };
+        pts[0] = { 236.0, 185.0 };
+        pts[1] = { 880.0, 324.0 };
+        pts[2] = { 873.0, 682.0 };
+        pts[3] = { 245.0, 857.0 };
 
         img = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
 
+        // std::string save_path = "imgs/" + std::to_string(counter++) + ".jpg";
+        // if(!cv::imwrite(save_path, img)) {
+        //     std::cerr << "an error occured\n";
+        // }
+        // cv::imshow("transformed", img);
+
+        // cv::waitKey(0);
+
         Mat red_line;
         // B, G, R
-        Scalar lowerb(220, 220, 220);
+        Scalar lowerb(100, 100, 100);
         Scalar upperb(255, 255, 255);
         cv::inRange(img, lowerb, upperb, red_line);
         
@@ -269,10 +275,6 @@ int main() {
         int bottomR = 0;
         vector<Vertex> tempV;
 
-        // // ---------- Preview the filtered picture (if needed) ----------
-        // // imshow("perspective", red_line);
-        // // waitKey(0);
-
         int h = red_line.rows;
         int w = red_line.cols;
 
@@ -283,19 +285,38 @@ int main() {
         cv::Mat modified = backG.clone();
 
         for(int r=0; r<h; r++) {
+            int total = 0;
+            int counter = 0;
             for(int c=0; c<w; c++) {
                 if(red_line.at<uchar>(r,c) != 0) {
+                    total += c;
+                    counter++;
                     // std::cout << "(" << r << "," << c << ")" << std::endl;
-                    backG.at<float>(r, c) = 1.0;
+                    // backG.at<float>(r, c) = 1.0;
                     bottomR = r;
-                    break;
+                    // break;
                 }
             }
+            if(counter == 0) {
+                continue;
+            }
+            backG.at<float>(r, total/counter) = 1.0;
         }
 
-        // cv::imshow("background2", backG);
+        // cv::imshow("background", backG);
+
+        cv::Mat saveImage;
+        cv::normalize(backG, saveImage, 0, 255, cv::NORM_MINMAX, CV_8U);
+
+        std::string save_path = "imgs/" + std::to_string(counter++) + ".jpg";
+        if (!cv::imwrite(save_path, saveImage)) {
+            std::cerr << "An error occurred while saving the image." << std::endl;
+        }
         
-        int centerC = 420; // center column
+        int centerC = w / 2; // center column
+        // std::cout << "width: " << w << ", height: " << h << std::endl;
+        // std::cout << "bottomR: " << bottomR << std::endl;
+        // std::cout << "centerC: " << centerC << std::endl;
 
         for (int r = 0; r < h; r++) {
             int cIndex = 0;
@@ -309,12 +330,12 @@ int main() {
             }
         }
 
-        std::cout << tempV.size() << std::endl;
+        // std::cout << tempV.size() << std::endl;
 
-        int intv = 20; // Vertical resolution
+        int intv = 2; // Vertical resolution
         intv = tempV.size() / intv;
 
-        std::cout << "intv : " << intv << std::endl;
+        // std::cout << "intv : " << intv << std::endl;
 
         if (!tempV.empty() && intv != 0) {
             vector<Vertex> V;
@@ -327,19 +348,19 @@ int main() {
             }
 
             V.push_back(tempV[tempV.size() - 1]);
-            std::cout << "v size : " << V.size() << std::endl;
+            // std::cout << "v size : " << V.size() << std::endl;
             meshPoints.push_back(V);
             lineLength.push_back(-1 * V.size());
         }
 
         std::cout << "theta: " << theta << std::endl;
-        std::cout << "meshPoints length: " << meshPoints.size() << std::endl << std::endl;
+        // std::cout << "meshPoints length: " << meshPoints.size() << std::endl << std::endl;
 
-        delay(150);
-        move(true, STEP_SIZE);
+        // delay(150);
+        move(true, STEP_PER_MOVEMENT);
+        theta = theta + static_cast<double>((360.0 / (2048 / STEP_PER_MOVEMENT)));
 
-        theta = theta+DEGREE_PER_ROTATION;
-
+        delay(30);
         // // theta += thetaInc;
         // // // Step the motor
         // // i = step(static_cast<int>(motorPosI), i);
@@ -348,11 +369,11 @@ int main() {
         
     }
 
-    std::cout << meshPoints.at(0).size() << std::endl;
+    // std::cout << meshPoints.at(0).size() << std::endl;
 
     int shortest = meshPoints[distance(lineLength.begin(), max_element(lineLength.begin(), lineLength.end()))].size();
 
-    std::cout << "shortest : " << shortest << std::endl;
+    // std::cout << "shortest : " << shortest << std::endl;
 
     for (vector<vector<Vertex>>::iterator it = meshPoints.begin(); it != meshPoints.end(); ++it) {
         while (it->size() > shortest) {
@@ -360,7 +381,7 @@ int main() {
         }
     }
 
-    std::cout << "mesh point first item size : " << meshPoints.at(0).size() << std::endl;
+    // std::cout << "mesh point first item size : " << meshPoints.at(0).size() << std::endl;
 
     vector<Vertex> points;
     vector<Face> faces;
@@ -434,7 +455,9 @@ int main() {
     }
 
     // cv::waitKey(0);
-    
+    auto t_end = std::chrono::high_resolution_clock::now();
+    double elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    std::cout << "elapsed time : " << elapsed_time_ms << std::endl;
 
     return 0;
 }
