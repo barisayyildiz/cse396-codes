@@ -224,7 +224,7 @@ int main() {
     vector<int> lineLength;
     // double theta = 0.0;
 
-    for(; theta<360; ) {
+    for(int i=0; i<3; i++) {
         cv::VideoCapture cap(0);
         if (!cap.isOpened()) {
             cout << "Error: Camera not found" << endl;
@@ -234,7 +234,11 @@ int main() {
         cap >> img;
         cap.release();
 
-        delay(1000);
+        if(!cv::imwrite("test.jpg", img)) {
+            std::cerr << "an error occured\n";
+        }
+
+        delay(200);
 
         // img = cv::imread("test_image.jpg");
 
@@ -242,11 +246,11 @@ int main() {
 
         Point2f pts[4];
         pts[0] = { 0.0, 0.0 };
-        pts[1] = { 200.0, 0.0 };
-        pts[2] = { 200.0, 200.0 };
-        pts[3] = { 0.0, 200.0 };
+        pts[1] = { 800.0, 0.0 };
+        pts[2] = { 800.0, 800.0 };
+        pts[3] = { 0.0, 800.0 };
 
-        // img = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
+        img = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
 
         Mat red_line;
         // B, G, R
