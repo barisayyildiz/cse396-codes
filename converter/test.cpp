@@ -31,7 +31,7 @@ const int ledPin = 18;
 #define DELAY_ONE_STEP 3
 #define DELAY_MOVE 150
 
-#define STEP_PER_MOVEMENT 64
+#define STEP_PER_MOVEMENT 8
 
 int step_number = 0;
 int counter = 0;
@@ -222,10 +222,8 @@ int main() {
     vector<int> lineLength;
     // double theta = 0.0;
 
-    int counter = 0;
-
     auto t_start = std::chrono::high_resolution_clock::now();
-    for(int i=0; theta<360; i++) {
+    for(int counter=0; theta<=360; counter++) {
         cv::VideoCapture cap(0);
         if (!cap.isOpened()) {
             cout << "Error: Camera not found" << endl;
@@ -237,6 +235,10 @@ int main() {
 
         // cv::imshow("original image", img);
         // std::cout << img.rows << ", " << img.cols << std::endl;
+        std::string save_path = "imgs/original/" + std::to_string(counter) + ".jpg";
+        if(!cv::imwrite(save_path, img)) {
+            std::cerr << "an error occured\n";
+        }
 
         // img = cv::imread("test_image.jpg");
 
@@ -249,20 +251,23 @@ int main() {
         pts[3] = { 245.0, 857.0 };
 
         img = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
+        save_path = "imgs/four_points/" + std::to_string(counter) + ".jpg";
+        if(!cv::imwrite(save_path, img)) {
+            std::cerr << "an error occured\n";
+        }
 
-        // std::string save_path = "imgs/" + std::to_string(counter++) + ".jpg";
-        // if(!cv::imwrite(save_path, img)) {
-        //     std::cerr << "an error occured\n";
-        // }
         // cv::imshow("transformed", img);
-
-        // cv::waitKey(0);
 
         Mat red_line;
         // B, G, R
-        Scalar lowerb(100, 100, 100);
+        Scalar lowerb(0, 0, 50);
         Scalar upperb(255, 255, 255);
         cv::inRange(img, lowerb, upperb, red_line);
+
+        save_path = "imgs/red_line/" + std::to_string(counter) + ".jpg";
+        if(!cv::imwrite(save_path, red_line)) {
+            std::cerr << "an error occured\n";
+        }
         
         // Create windows and display images
         // cv::namedWindow("Original Image", cv::WINDOW_NORMAL);
@@ -270,6 +275,10 @@ int main() {
 
         // cv::namedWindow("Red Line Image", cv::WINDOW_NORMAL);
         // cv::imshow("Red Line Image", red_line);
+        // std::string save_path = "imgs/" + std::to_string(counter++) + ".jpg";
+        // if (!cv::imwrite(save_path, red_line)) {
+        //     std::cerr << "An error occurred while saving the image." << std::endl;
+        // }
 
         Mat backG;
         int bottomR = 0;
@@ -292,15 +301,15 @@ int main() {
                     total += c;
                     counter++;
                     // std::cout << "(" << r << "," << c << ")" << std::endl;
-                    // backG.at<float>(r, c) = 1.0;
-                    bottomR = r;
-                    // break;
+                    backG.at<float>(r, c) = 1.0;
+                    // bottomR = r;
+                    break;
                 }
             }
-            if(counter == 0) {
-                continue;
-            }
-            backG.at<float>(r, total/counter) = 1.0;
+            // if(counter == 0) {
+            //     continue;
+            // }
+            // backG.at<float>(r, total/counter) = 1.0;
         }
 
         // cv::imshow("background", backG);
@@ -308,12 +317,13 @@ int main() {
         cv::Mat saveImage;
         cv::normalize(backG, saveImage, 0, 255, cv::NORM_MINMAX, CV_8U);
 
-        std::string save_path = "imgs/" + std::to_string(counter++) + ".jpg";
+        save_path = "imgs/final/" + std::to_string(counter) + ".jpg";
         if (!cv::imwrite(save_path, saveImage)) {
             std::cerr << "An error occurred while saving the image." << std::endl;
         }
         
-        int centerC = w / 2; // center column
+        // int centerC = w / 2; // center column
+        int centerC = 420;
         // std::cout << "width: " << w << ", height: " << h << std::endl;
         // std::cout << "bottomR: " << bottomR << std::endl;
         // std::cout << "centerC: " << centerC << std::endl;
@@ -332,7 +342,7 @@ int main() {
 
         // std::cout << tempV.size() << std::endl;
 
-        int intv = 2; // Vertical resolution
+        int intv = 20; // Vertical resolution
         intv = tempV.size() / intv;
 
         // std::cout << "intv : " << intv << std::endl;
@@ -356,11 +366,11 @@ int main() {
         std::cout << "theta: " << theta << std::endl;
         // std::cout << "meshPoints length: " << meshPoints.size() << std::endl << std::endl;
 
-        // delay(150);
+        delay(100);
         move(true, STEP_PER_MOVEMENT);
         theta = theta + static_cast<double>((360.0 / (2048 / STEP_PER_MOVEMENT)));
 
-        delay(30);
+        // delay(30);
         // // theta += thetaInc;
         // // // Step the motor
         // // i = step(static_cast<int>(motorPosI), i);

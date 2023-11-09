@@ -9,7 +9,6 @@ from time import sleep
 import RPi.GPIO as GPIO
 import time
 import os
-import wiringpi
 
 # pins of the stepper motor
 STEPPER_PIN_1 = 1
@@ -17,24 +16,19 @@ STEPPER_PIN_2 = 7
 STEPPER_PIN_3 = 8
 STEPPER_PIN_4 = 25
 
-STEP_PER_MOVEMENT = 512
+GPIO.setmode(GPIO.BCM)
+control_pins = [1,7,8,25]
+for pin in control_pins:
+  GPIO.setup(pin, GPIO.OUT)
+  GPIO.output(pin, 0)
+
+STEP_PER_MOVEMENT = 32
 DELAY_ONE_STEP = 0.003
 stepNumber = 0
 
 # placeholder variable to track status of stepper motor
 i=0
 
-# GPIO setup
-# GPIO.setmode(GPIO.BCM)
-# GPIO.setup(STEPPER_PIN_1,GPIO.OUT)
-# GPIO.setup(STEPPER_PIN_2,GPIO.OUT)
-# GPIO.setup(STEPPER_PIN_3,GPIO.OUT)
-# GPIO.setup(STEPPER_PIN_4,GPIO.OUT)
-wiringpi.wiringPiSetup()
-wiringpi.pinMode(STEPPER_PIN_1, 1)
-wiringpi.pinMode(STEPPER_PIN_1, 1)
-wiringpi.pinMode(STEPPER_PIN_1, 1)
-wiringpi.pinMode(STEPPER_PIN_1, 1)
 
 #vertex class
 class vertex:
@@ -120,192 +114,29 @@ def getVertex(pCoord):
 	z = H
 	return vertex(int(x),int(y),int(z))
 
-# # steps motor forward indicated number of steps
-# # inputs x: number of steps to move, i: status of stepper
-# # outputs new i (status of stepper)
-# def step(x, i):
-#     positive=0
-#     negative=0
-#     y=0
-
-#     GPIO.output(out1,GPIO.LOW)
-#     GPIO.output(out2,GPIO.LOW)
-#     GPIO.output(out3,GPIO.LOW)
-#     GPIO.output(out4,GPIO.LOW)
-#     #x = input()
-#     if x>0 and x<=400:
-#       #print "step"
-#       for y in range(x,0,-1):
-#         if negative==1:
-#           if i==7:
-#             i=0
-#           else:
-#             i=i+1
-#           y=y+2
-#           negative=0
-#         positive=1
-#         #print((x+1)-y)
-#         if i==0:
-#           GPIO.output(out1,GPIO.HIGH)
-#           GPIO.output(out2,GPIO.LOW)
-#           GPIO.output(out3,GPIO.LOW)
-#           GPIO.output(out4,GPIO.LOW)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==1:
-#           GPIO.output(out1,GPIO.HIGH)
-#           GPIO.output(out2,GPIO.HIGH)
-#           GPIO.output(out3,GPIO.LOW)
-#           GPIO.output(out4,GPIO.LOW)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==2:
-#           GPIO.output(out1,GPIO.LOW)
-#           GPIO.output(out2,GPIO.HIGH)
-#           GPIO.output(out3,GPIO.LOW)
-#           GPIO.output(out4,GPIO.LOW)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==3:
-#           GPIO.output(out1,GPIO.LOW)
-#           GPIO.output(out2,GPIO.HIGH)
-#           GPIO.output(out3,GPIO.HIGH)
-#           GPIO.output(out4,GPIO.LOW)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==4:
-#           GPIO.output(out1,GPIO.LOW)
-#           GPIO.output(out2,GPIO.LOW)
-#           GPIO.output(out3,GPIO.HIGH)
-#           GPIO.output(out4,GPIO.LOW)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==5:
-#           GPIO.output(out1,GPIO.LOW)
-#           GPIO.output(out2,GPIO.LOW)
-#           GPIO.output(out3,GPIO.HIGH)
-#           GPIO.output(out4,GPIO.HIGH)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==6:
-#           GPIO.output(out1,GPIO.LOW)
-#           GPIO.output(out2,GPIO.LOW)
-#           GPIO.output(out3,GPIO.LOW)
-#           GPIO.output(out4,GPIO.HIGH)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==7:
-#           GPIO.output(out1,GPIO.HIGH)
-#           GPIO.output(out2,GPIO.LOW)
-#           GPIO.output(out3,GPIO.LOW)
-#           GPIO.output(out4,GPIO.HIGH)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         if i==7:
-#           i=0
-#           continue
-#         i=i+1
-
-
-#     elif x<0 and x>=-400:
-#       x=x*-1
-#       for y in range(x,0,-1):
-#         if positive==1:
-#           if i==0:
-#             i=7
-#           else:
-#             i=i-1
-#           y=y+3
-#           positive=0
-#         negative=1
-#         #print((x+1)-y)
-#         if i==0:
-#           GPIO.output(out1,GPIO.HIGH)
-#           GPIO.output(out2,GPIO.LOW)
-#           GPIO.output(out3,GPIO.LOW)
-#           GPIO.output(out4,GPIO.LOW)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==1:
-#           GPIO.output(out1,GPIO.HIGH)
-#           GPIO.output(out2,GPIO.HIGH)
-#           GPIO.output(out3,GPIO.LOW)
-#           GPIO.output(out4,GPIO.LOW)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==2:
-#           GPIO.output(out1,GPIO.LOW)
-#           GPIO.output(out2,GPIO.HIGH)
-#           GPIO.output(out3,GPIO.LOW)
-#           GPIO.output(out4,GPIO.LOW)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==3:
-#           GPIO.output(out1,GPIO.LOW)
-#           GPIO.output(out2,GPIO.HIGH)
-#           GPIO.output(out3,GPIO.HIGH)
-#           GPIO.output(out4,GPIO.LOW)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==4:
-#           GPIO.output(out1,GPIO.LOW)
-#           GPIO.output(out2,GPIO.LOW)
-#           GPIO.output(out3,GPIO.HIGH)
-#           GPIO.output(out4,GPIO.LOW)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==5:
-#           GPIO.output(out1,GPIO.LOW)
-#           GPIO.output(out2,GPIO.LOW)
-#           GPIO.output(out3,GPIO.HIGH)
-#           GPIO.output(out4,GPIO.HIGH)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==6:
-#           GPIO.output(out1,GPIO.LOW)
-#           GPIO.output(out2,GPIO.LOW)
-#           GPIO.output(out3,GPIO.LOW)
-#           GPIO.output(out4,GPIO.HIGH)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         elif i==7:
-#           GPIO.output(out1,GPIO.HIGH)
-#           GPIO.output(out2,GPIO.LOW)
-#           GPIO.output(out3,GPIO.LOW)
-#           GPIO.output(out4,GPIO.HIGH)
-#           time.sleep(0.03)
-#           #time.sleep(1)
-#         if i==0:
-#           i=7
-#           continue
-#         i=i-1
-
-#     return i
-
-LOW = 0
-HIGH = 1
+stepNumber = 0
 def oneStep():
 	global stepNumber
 	if stepNumber == 0:
-		wiringpi.digitalWrite(STEPPER_PIN_1, LOW)
-		wiringpi.digitalWrite(STEPPER_PIN_2, LOW)
-		wiringpi.digitalWrite(STEPPER_PIN_3, LOW)
-		wiringpi.digitalWrite(STEPPER_PIN_4, HIGH)
+		GPIO.output(control_pins[0], 0)
+		GPIO.output(control_pins[1], 0)
+		GPIO.output(control_pins[2], 0)
+		GPIO.output(control_pins[3], 1)
 	elif stepNumber == 1:
-		wiringpi.digitalWrite(STEPPER_PIN_1, LOW)
-		wiringpi.digitalWrite(STEPPER_PIN_2, LOW)
-		wiringpi.digitalWrite(STEPPER_PIN_3, HIGH)
-		wiringpi.digitalWrite(STEPPER_PIN_4, LOW)
+		GPIO.output(control_pins[0], 0)
+		GPIO.output(control_pins[1], 0)
+		GPIO.output(control_pins[2], 1)
+		GPIO.output(control_pins[3], 0)
 	elif stepNumber == 2:
-		wiringpi.digitalWrite(STEPPER_PIN_1, LOW)
-		wiringpi.digitalWrite(STEPPER_PIN_2, HIGH)
-		wiringpi.digitalWrite(STEPPER_PIN_3, LOW)
-		wiringpi.digitalWrite(STEPPER_PIN_4, LOW)
+		GPIO.output(control_pins[0], 0)
+		GPIO.output(control_pins[1], 1)
+		GPIO.output(control_pins[2], 0)
+		GPIO.output(control_pins[3], 0)
 	elif stepNumber == 3:
-		wiringpi.digitalWrite(STEPPER_PIN_1, HIGH)
-		wiringpi.digitalWrite(STEPPER_PIN_2, LOW)
-		wiringpi.digitalWrite(STEPPER_PIN_3, LOW)
-		wiringpi.digitalWrite(STEPPER_PIN_4, LOW)
+		GPIO.output(control_pins[0], 1)
+		GPIO.output(control_pins[1], 0)
+		GPIO.output(control_pins[2], 0)
+		GPIO.output(control_pins[3], 0)
 	stepNumber += 1
 	if stepNumber > 3:
 		stepNumber = 0
@@ -335,12 +166,14 @@ while (1):
 	lineLenth = []
 	counter = 0
 
-	while(theta < 360):
+	while(theta <= 360):
 		#will loop this
 		cap = cv2.VideoCapture(0)
 		ret, img = cap.read()
-		sleep(1)
+		sleep(0.2)
 		cap.release()
+
+		cv2.imwrite(f"imgs/original/{counter}.jpg", img)
 
 		#get perspective
 		tlp = (236.0,185.0)
@@ -350,27 +183,21 @@ while (1):
 		pts = np.array([tlp,trp,brp,blp])
 		img = four_point_transform(img, pts)
 
+		cv2.imwrite(f"imgs/four_points/{counter}.jpg", img)
+
 		#---------- Preview the PERSPECTIVE picture ----------------
 		#cv2.imshow("perspective", img)
 		#cv2.waitKey(0)
 
 
 		# filter
-		lowerb = np.array([50, 0, 0])
+		lowerb = np.array([100, 0, 0])
 		upperb = np.array([255, 255, 255])
 		#1200,1600
 		red_line = cv2.inRange(img, lowerb, upperb)
 		##red_line = cv2.resize(red_line, (60,80), interpolation = cv2.INTER_AREA)
 
-
-		#---------- Preview the filtered picture ----------------
-		# cv2.imshow("perspective", red_line)
-		# cv2.waitKey(0)
-		#print red_line.shape
-		cv2.imwrite(f"imgs/{counter}.jpg", red_line)
-		print("counter: ", counter)
-		counter += 1
-
+		cv2.imwrite(f"imgs/red_line/{counter}.jpg", red_line)
 
 		h,w = np.shape(red_line)
 		backG = np.zeros((h, w))
@@ -385,6 +212,8 @@ while (1):
 				backG[r,cIndex] = 1
 				bottomR = r
 			r += 1
+		
+		cv2.imwrite(f"imgs/final/{counter}.jpg", backG)
 
 		#---------- Preview the processed picture ----------------
 		#cv2.imshow("perspective", backG)
@@ -393,7 +222,7 @@ while (1):
 
 		tempV = []
 		r = 0
-		centerC = 420.0 #center column
+		centerC = 420.0 #center column TODO ne olduğunu anla
 		for cIndex in np.argmax(backG,axis=1):
 			if(backG[r,cIndex] == 1):
 				#intvi = 0
@@ -423,9 +252,10 @@ while (1):
 		# theta += thetaInc
 		# i = step(int(motorPosI),i)
 		# time.sleep(0.3)
-		move(STEP_PER_MOVEMENT)
 		print("theta: ", theta)
+		move(STEP_PER_MOVEMENT)
 		theta = theta + ((360.0 / (2048 / STEP_PER_MOVEMENT)))
+		counter += 1
 
 
 	# for row in meshPoints:
@@ -445,6 +275,7 @@ while (1):
 	faces = []
 	firstRow = []
 	prevRow = []
+	lastVertices = []
 	for index in range(1,len(meshPoints[0])+1):
 
 		points.append(getVertex(meshPoints[0][index-1]))
@@ -481,7 +312,13 @@ while (1):
 					f2 = face(bl,tr,br)
 					faces.append(f1)
 					faces.append(f2)
+			lastVertices.append(prevRow[-1])
 			prevRow = currentRow
+		
+	
+	# objenin tabanını çiz
+	for i in range(1, len(lastVertices)-1):
+		faces.append(face(lastVertices[0], lastVertices[i], lastVertices[i+1]))
 
 	#---------- debugging prints ----------------
 	# for point in points:
