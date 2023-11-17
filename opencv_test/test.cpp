@@ -8,8 +8,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
-#include <wiringPi.h>
 #include <chrono>
 
 using namespace std;
@@ -66,18 +64,22 @@ int main() {
     cap >> img;
     cap.release();
 
-    std::cout << img.rows << ", " << img.cols << std::endl;
+    if(!cv::imwrite("imgs/test.jpg", img)) {
+        std::cerr << "an error occured";
+    }
 
-    Point2f pts[4];
-    pts[0] = { 0.0, 0.0 };
-    pts[1] = { 800.0, 0.0 };
-    pts[2] = { 800.0, 800.0 };
-    pts[3] = { 0.0, 800.0 };
+    // std::cout << img.rows << ", " << img.cols << std::endl;
 
-    cv::Mat transformed = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
+    // Point2f pts[4];
+    // pts[0] = { 0.0, 0.0 };
+    // pts[1] = { 800.0, 0.0 };
+    // pts[2] = { 800.0, 800.0 };
+    // pts[3] = { 0.0, 800.0 };
 
-    cv::imshow("test", img);
-    cv::imshow("transformed", transformed);
+    // cv::Mat transformed = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
+
+    // cv::imshow("test", img);
+    // cv::imshow("transformed", transformed);
     cv::waitKey(0);
 
     return 0;

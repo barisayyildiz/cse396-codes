@@ -5,6 +5,7 @@
 import cv2
 import numpy as np
 import math
+from picamera import PiCamera
 from time import sleep
 import RPi.GPIO as GPIO
 import time
@@ -17,7 +18,7 @@ STEPPER_PIN_3 = 8
 STEPPER_PIN_4 = 25
 
 GPIO.setmode(GPIO.BCM)
-control_pins = [1,7,8,25]
+control_pins = [1,7,8,25]                                                                                                                                                                          
 for pin in control_pins:
   GPIO.setup(pin, GPIO.OUT)
   GPIO.output(pin, 0)
@@ -168,18 +169,24 @@ while (1):
 
 	while(theta <= 360):
 		#will loop this
-		cap = cv2.VideoCapture(0)
-		ret, img = cap.read()
+		# cap = cv2.VideoCapture(0)
+		# ret, img = cap.read()
+		# sleep(0.2)
+		# cap.release()
+		camera = PiCamera()
+		camera.start_preview()
 		sleep(0.2)
-		cap.release()
+		camera.capture('lineDetection.jpg')
+		camera.close()
+		img = cv2.imread('lineDetection.jpg')
 
 		cv2.imwrite(f"imgs/original/{counter}.jpg", img)
 
 		#get perspective
-		tlp = (236.0,185.0)
-		trp = (880.0,324.0)
-		brp = (873.0,682.0)
-		blp = (245.0,857.0)
+		tlp = (277.0,90.0)
+		trp = (733.0,90.0)
+		brp = (733.0,634.0)
+		blp = (277.0,634.0)
 		pts = np.array([tlp,trp,brp,blp])
 		img = four_point_transform(img, pts)
 
@@ -190,30 +197,47 @@ while (1):
 		#cv2.waitKey(0)
 
 
-		# filter
-		lowerb = np.array([100, 0, 0])
-		upperb = np.array([255, 255, 255])
-		#1200,1600
-		red_line = cv2.inRange(img, lowerb, upperb)
-		##red_line = cv2.resize(red_line, (60,80), interpolation = cv2.INTER_AREA)
+		# # filter
+		# lowerb = np.array([0, 0, 80])
+		# upperb = np.array([255, 255, 255])
+		# #1200,1600
+		# red_line = cv2.inRange(img, lowerb, upperb)
+		# ##red_line = cv2.resize(red_line, (60,80), interpolation = cv2.INTER_AREA)
+		# cv2.imwrite(f"imgs/red_line/{counter}.jpg", red_line)
 
-		cv2.imwrite(f"imgs/red_line/{counter}.jpg", red_line)
-
-		h,w = np.shape(red_line)
+		h,w, _ = np.shape(img)
 		backG = np.zeros((h, w))
-
-		#print backG
-
 		bottomR = 0
 
-		r = 0
-		for cIndex in np.argmax(red_line, axis=1):
-			if red_line[r,cIndex] != 0:
-				backG[r,cIndex] = 1
-				bottomR = r
-			r += 1
+		rows, cols, _ = img.shape
 		
-		cv2.imwrite(f"imgs/final/{counter}.jpg", backG)
+		for r in range(rows):
+			cIndex = np.argmax(img[r, :, 2])
+			if img[r, cIndex, 2] > 35:
+				backG[r, cIndex] = 1
+				bottomR = r
+
+		# for rIndex in range(h):
+		# 	maxVal = -1
+		# 	maxColIndex = -1
+		# 	for cIndex in range(w):
+		# 		val = img[rIndex, cIndex, 2]
+		# 		if val > 50 and val > maxVal:
+		# 			maxVal = val
+		# 			maxColIndex = cIndex
+		# 	if maxVal != -1:
+		# 		backG[rIndex, maxColIndex] = 1
+		# 		bottomR = rIndex
+		cv2.imwrite(f"imgs/redline/{counter}.jpg", backG)
+
+		# r = 0
+		# for cIndex in np.argmax(red_line, axis=1):
+		# 	if red_line[r,cIndex] != 0:
+		# 		backG[r,cIndex] = 1
+		# 		bottomR = r
+		# 	r += 1
+		
+		# cv2.imwrite(f"imgs/final/{counter}.jpg", backG)
 
 		#---------- Preview the processed picture ----------------
 		#cv2.imshow("perspective", backG)
@@ -222,7 +246,7 @@ while (1):
 
 		tempV = []
 		r = 0
-		centerC = 420.0 #center column TODO ne olduğunu anla
+		centerC = 300.0 #center column TODO ne olduğunu anla
 		for cIndex in np.argmax(backG,axis=1):
 			if(backG[r,cIndex] == 1):
 				#intvi = 0
@@ -233,7 +257,7 @@ while (1):
 			r += 1
 
 		# vertical resolution
-		intv = 20
+		intv = 80
 		intv = len(tempV)//intv
 
 		if(len(tempV) != 0 and intv != 0):
