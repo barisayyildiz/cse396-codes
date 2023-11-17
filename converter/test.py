@@ -23,7 +23,7 @@ for pin in control_pins:
   GPIO.setup(pin, GPIO.OUT)
   GPIO.output(pin, 0)
 
-STEP_PER_MOVEMENT = 32
+STEP_PER_MOVEMENT = 16
 DELAY_ONE_STEP = 0.003
 stepNumber = 0
 
@@ -214,22 +214,11 @@ while (1):
 		
 		for r in range(rows):
 			cIndex = np.argmax(img[r, :, 2])
-			if img[r, cIndex, 2] > 35:
+			if img[r, cIndex, 2] > 15:
 				backG[r, cIndex] = 1
 				bottomR = r
 
-		# for rIndex in range(h):
-		# 	maxVal = -1
-		# 	maxColIndex = -1
-		# 	for cIndex in range(w):
-		# 		val = img[rIndex, cIndex, 2]
-		# 		if val > 50 and val > maxVal:
-		# 			maxVal = val
-		# 			maxColIndex = cIndex
-		# 	if maxVal != -1:
-		# 		backG[rIndex, maxColIndex] = 1
-		# 		bottomR = rIndex
-		cv2.imwrite(f"imgs/redline/{counter}.jpg", backG)
+		cv2.imwrite(f"imgs/red_line/{counter}.jpg", (backG * 255).astype(np.uint8))
 		# cv2.imshow("backg", backG)
 		# cv2.waitKey(0)
 
@@ -249,7 +238,7 @@ while (1):
 
 		tempV = []
 		r = 0
-		centerC = 300.0 #center column TODO ne olduğunu anla
+		centerC = 275.0 #center column TODO ne olduğunu anla
 		for cIndex in np.argmax(backG,axis=1):
 			if(backG[r,cIndex] == 1):
 				#intvi = 0
