@@ -39,8 +39,9 @@ class vertex:
 		self.z = z
 
 	def write(self):
-		return "v " + str(self.x) + " " + str(self.y) + " " +str(self.z)
-		#return  str(self.x) + "," + str(self.y) + "," +str(self.z)
+		output = "v " + str(self.x) + " " + str(self.y) + " " +str(self.z) + "\n"
+		output += "vt " + str(self.x) + " " + str(self.y) + "\n"
+		return output
 #face class
 class face:
 	def __init__(self, v1,v2,v3):
@@ -49,7 +50,7 @@ class face:
 		self.v3 = v3
 
 	def write(self):
-		return "f " + str(self.v1) + " " + str(self.v2) + " " +str(self.v3)
+		return "f " + str(self.v1) + " " + str(self.v2) + " " + str(self.v3) + "\n"
 
 def order_points(pts):
 	# initialzie a list of coordinates that will be ordered
@@ -229,6 +230,8 @@ while (1):
 		# 		backG[rIndex, maxColIndex] = 1
 		# 		bottomR = rIndex
 		cv2.imwrite(f"imgs/redline/{counter}.jpg", backG)
+		# cv2.imshow("backg", backG)
+		# cv2.waitKey(0)
 
 		# r = 0
 		# for cIndex in np.argmax(red_line, axis=1):
@@ -257,7 +260,7 @@ while (1):
 			r += 1
 
 		# vertical resolution
-		intv = 80
+		intv = 200
 		intv = len(tempV)//intv
 
 		if(len(tempV) != 0 and intv != 0):
@@ -343,6 +346,23 @@ while (1):
 	# objenin tabanını çiz
 	for i in range(1, len(lastVertices)-1):
 		faces.append(face(lastVertices[0], lastVertices[i], lastVertices[i+1]))
+	
+	# Initialize min and max values
+	min_values = [float('inf'), float('inf'), float('inf')]
+	max_values = [-float('inf'), -float('inf'), -float('inf')]
+	
+	# Iterate through the lines to find min and max values
+	for point in points:
+		x, y, z = point.x, point.y, point.z
+		min_values = [min(min_values[i], x, y, z) for i in range(3)]
+		max_values = [max(max_values[i], x, y, z) for i in range(3)]
+	
+	# normalize vertices
+	ranges = [max_values[i] - min_values[i] for i in range(3)]
+	for point in points:
+		point.x = (point.x - min_values[0]) / ranges[0]
+		point.y = (point.y - min_values[1]) / ranges[1]
+		point.z = (point.z - min_values[2]) / ranges[2]
 
 	#---------- debugging prints ----------------
 	# for point in points:
@@ -354,9 +374,9 @@ while (1):
 	filetowrite='3d.obj'
 	with open(filetowrite, 'w') as file:
 		for point in points:
-			file.write(point.write() + "\n")
+			file.write(point.write())
 		for f in faces:
-			file.write(f.write() + "\n")
+			file.write(f.write())
 		file.close()
 	break
 
