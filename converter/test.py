@@ -209,14 +209,21 @@ while (1):
 		h,w, _ = np.shape(img)
 		backG = np.zeros((h, w))
 		bottomR = 0
+		topR = 0
 
 		rows, cols, _ = img.shape
 		
 		for r in range(rows):
 			cIndex = np.argmax(img[r, :, 2])
-			if img[r, cIndex, 2] > 15:
+			if img[r, cIndex, 2] > 25:
 				backG[r, cIndex] = 1
 				bottomR = r
+				if topR == 0:
+					topR = r
+		for r in range(topR, bottomR):
+			cIndex = np.argmax(img[r, :, 2])
+			if img[r, cIndex, 2] > 5:
+				backG[r, cIndex] = 1
 
 		cv2.imwrite(f"imgs/red_line/{counter}.jpg", (backG * 255).astype(np.uint8))
 		# cv2.imshow("backg", backG)
@@ -249,7 +256,7 @@ while (1):
 			r += 1
 
 		# vertical resolution
-		intv = 200
+		intv = 400
 		intv = len(tempV)//intv
 
 		if(len(tempV) != 0 and intv != 0):
