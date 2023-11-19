@@ -14,6 +14,14 @@ ScannedPoints::ScannedPoints(QWidget *parent)
     chart_->setTitle("Number of scanned points");
     chart_->createDefaultAxes();
 
+    QValueAxis *axisX = new QValueAxis();
+    axisX->setTitleText("Current Step");
+    chart_->setAxisX(axisX, series_);
+
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setTitleText("Number of Scanned Points");
+    chart_->setAxisY(axisY, series_);
+
     stepCounter = 0;
     yMax = 0;
 }
