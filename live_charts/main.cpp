@@ -64,7 +64,7 @@ int sendConfig() {
 }
 
 
-int readData(int& serverSocket, PointCloud* pointCloud) {
+int readData(int& serverSocket, ScannedPoints* scannedPoints, PointCloud* pointCloud) {
     qDebug() << "Start of the socket thread";
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1) {
@@ -138,6 +138,9 @@ int readData(int& serverSocket, PointCloud* pointCloud) {
         int numOfScannedPoints = atoi(buffer);
         qDebug() << "number of scanned points : " << numOfScannedPoints;
 
+        scannedPoints->addNewDataPoint((double)numOfScannedPoints);
+
+
         for(int i=0; i<numOfScannedPoints; i++) {
             memset(buffer, '\0', BUFFER_SIZE);
             recv(clientSocket, buffer, sizeof(buffer), 0);
@@ -197,13 +200,12 @@ int main(int argc, char *argv[])
     PointCloud pointCloud;
     //pointCloud.show();
 
-    /*ScannedPoints chartView(&mainWindow);
+    ScannedPoints chartView(&mainWindow);
     chartView.addNewDataPoint(0.4);
     chartView.addNewDataPoint(0.5);
     chartView.addNewDataPoint(20);
     chartView.setMinimumHeight(500);
     chartView.setMinimumWidth(500);
-*/
 
     QWidget *container = QWidget::createWindowContainer(&pointCloud);
     container->setMinimumSize(400, 400);
@@ -216,8 +218,8 @@ int main(int argc, char *argv[])
     QPushButton *button = new QPushButton("Add new data point");
 
     //layout.addWidget(headerLabel);
-    layout.addWidget(container);
-    //layout.addWidget(&chartView);
+    //layout.addWidget(container);
+    layout.addWidget(&chartView);
     //layout.addWidget(button);
 
     mainWindow.setCentralWidget(&widget);
@@ -232,7 +234,7 @@ int main(int argc, char *argv[])
     */
 
     // new thread
-    std::thread t1(readData, std::ref(dataSocket), &pointCloud);
+    std::thread t1(readData, std::ref(dataSocket), &chartView, &pointCloud);
 
     QObject::connect(button, &QPushButton::clicked, [&]() {
         qDebug() << "clicked...";
