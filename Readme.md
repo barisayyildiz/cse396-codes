@@ -26,3 +26,7 @@ add_executable(main main.cpp)
 
 target_link_libraries(main ${OpenCV_LIBS} ${WIRINGPI_LIBRARY}) # Link both OpenCV and WiringPi
 ```
+
+
+### terminalden opencv kodunu compile etmek için
+g++ -g test.cpp -o test -I/usr/local/include/opencv4 -L/usr/local/lib -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs
