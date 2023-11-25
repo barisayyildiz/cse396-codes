@@ -9,40 +9,31 @@
 #include <fstream>
 #include <sstream>
 
-#include <wiringPi.h>
+// #include <wiringPi.h>
 #include <chrono>
 
 using namespace cv;
 using namespace std;
-
-const int out1 = 13;
-const int out2 = 16;
-const int out3 = 5;
-const int out4 = 12;
-const int buttonPin = 23;
-const int ledPin = 18;
-
 
 #define STEPPER_PIN_1 1
 #define STEPPER_PIN_2 7
 #define STEPPER_PIN_3 8
 #define STEPPER_PIN_4 25
 
-#define DELAY_ONE_STEP 3
-#define DELAY_MOVE 150
-
 #define STEP_PER_MOVEMENT 8
+#define DELAY_ONE_STEP 0.003
 
-int step_number = 0;
+int stepNumber = 0;
 int counter = 0;
 
 class Vertex {
     public:
-        int x, y, z;
+        double x, y, z;
         stringstream ss;
         
-        Vertex(int x, int y, int z) : x(x), y(y), z(z) {
-            ss << "v " << x << " " << y << " " << z;
+        Vertex(double x, double y, double z) : x(x), y(y), z(z) {
+            ss << "v " << x << " " << y << " " << z << "\n";
+            ss << "vt " << x << " " << y << "\n";
         }
 
         // Copy constructor
@@ -65,7 +56,8 @@ class Vertex {
         }
         
         friend std::ostream& operator<<(std::ostream& os, const Vertex& vertex) {
-            os << vertex.ss.str();
+            os << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+            os << "vt " << vertex.x << " " << vertex.y << "\n";
             return os;
         }
 };
@@ -76,20 +68,14 @@ public:
     Face(int v1, int v2, int v3) : v1(v1), v2(v2), v3(v3) {}
     string write() {
         stringstream ss;
-        ss << "f " << v1 << " " << v2 << " " << v3;
+        ss << "f " << v1 << " " << v2 << " " << v3 << "\n";
         return ss.str();
     }
+    friend std::ostream& operator<<(std::ostream& os, const Face& face) {
+        os << "f " << face.v1 << " " << face.v2 << " " << face.v3 << "\n";
+        return os;
+    }
 };
-
-Vertex getVertex(Vertex pCoord) {
-    int H = pCoord.x;
-    int t = pCoord.y;
-    int d = pCoord.z;
-    int x = d * cos(t);
-    int y = d * sin(t);
-    int z = H;
-    return Vertex(x, y, z);
-}
 
 cv::Mat fourPointTransform(cv::Mat image, std::vector<cv::Point2f> pts) {
     cv::Point2f tl = pts[0];
@@ -124,228 +110,147 @@ cv::Mat fourPointTransform(cv::Mat image, std::vector<cv::Point2f> pts) {
     return warped;
 }
 
-void oneStep(bool direction){
-    // std::cout << "counter : " << ++counter << std::endl;
-    if(direction){
-    switch(step_number){
-      case 0:
-      digitalWrite(STEPPER_PIN_1, HIGH);
-      digitalWrite(STEPPER_PIN_2, LOW);
-      digitalWrite(STEPPER_PIN_3, LOW);
-      digitalWrite(STEPPER_PIN_4, LOW);
-      break;
-      case 1:
-      digitalWrite(STEPPER_PIN_1, LOW);
-      digitalWrite(STEPPER_PIN_2, HIGH);
-      digitalWrite(STEPPER_PIN_3, LOW);
-      digitalWrite(STEPPER_PIN_4, LOW);
-      break;
-      case 2:
-      digitalWrite(STEPPER_PIN_1, LOW);
-      digitalWrite(STEPPER_PIN_2, LOW);
-      digitalWrite(STEPPER_PIN_3, HIGH);
-      digitalWrite(STEPPER_PIN_4, LOW);
-      break;
-      case 3:
-      digitalWrite(STEPPER_PIN_1, LOW);
-      digitalWrite(STEPPER_PIN_2, LOW);
-      digitalWrite(STEPPER_PIN_3, LOW);
-      digitalWrite(STEPPER_PIN_4, HIGH);
-      break;
-    }
-  }
-  else{
-    switch(step_number){
-      case 0:
-      digitalWrite(STEPPER_PIN_1, LOW);
-      digitalWrite(STEPPER_PIN_2, LOW);
-      digitalWrite(STEPPER_PIN_3, LOW);
-      digitalWrite(STEPPER_PIN_4, HIGH);
-      break;
-      case 1:
-      digitalWrite(STEPPER_PIN_1, LOW);
-      digitalWrite(STEPPER_PIN_2, LOW);
-      digitalWrite(STEPPER_PIN_3, HIGH);
-      digitalWrite(STEPPER_PIN_4, LOW);
-      break;
-      case 2:
-      digitalWrite(STEPPER_PIN_1, LOW);
-      digitalWrite(STEPPER_PIN_2, HIGH);
-      digitalWrite(STEPPER_PIN_3, LOW);
-      digitalWrite(STEPPER_PIN_4, LOW);
-      break;
-      case 3:
-      digitalWrite(STEPPER_PIN_1, HIGH);
-      digitalWrite(STEPPER_PIN_2, LOW);
-      digitalWrite(STEPPER_PIN_3, LOW);
-      digitalWrite(STEPPER_PIN_4, LOW);
-      break;
-    }
-  }
-  step_number++;
-  if(step_number > 3){
-    step_number = 0;
-  }
+Vertex getVertex(Vertex pCoord) {
+    double H = pCoord.x;
+    double t = pCoord.y;
+    double d = pCoord.z;
+    double x = d * cos(t);
+    double y = d * sin(t);
+    double z = H;
+    return Vertex((int)x, (int)y, (int)z);
 }
 
-void move(bool direction, int stepPrecision){
-    int precisionCounter = 0;
-    
-    while(precisionCounter < stepPrecision){
-        
-        oneStep(direction);
-        precisionCounter++;
+// void oneStep(bool direction){
+//     // std::cout << "counter : " << ++counter << std::endl;
+//     switch(stepNumber){
+//       case 0:
+//       digitalWrite(STEPPER_PIN_1, LOW);
+//       digitalWrite(STEPPER_PIN_2, LOW);
+//       digitalWrite(STEPPER_PIN_3, LOW);
+//       digitalWrite(STEPPER_PIN_4, HIGH);
+//       break;
+//       case 1:
+//       digitalWrite(STEPPER_PIN_1, LOW);
+//       digitalWrite(STEPPER_PIN_2, LOW);
+//       digitalWrite(STEPPER_PIN_3, HIGH);
+//       digitalWrite(STEPPER_PIN_4, LOW);
+//       break;
+//       case 2:
+//       digitalWrite(STEPPER_PIN_1, LOW);
+//       digitalWrite(STEPPER_PIN_2, HIGH);
+//       digitalWrite(STEPPER_PIN_3, LOW);
+//       digitalWrite(STEPPER_PIN_4, LOW);
+//       break;
+//       case 3:
+//       digitalWrite(STEPPER_PIN_1, HIGH);
+//       digitalWrite(STEPPER_PIN_2, LOW);
+//       digitalWrite(STEPPER_PIN_3, LOW);
+//       digitalWrite(STEPPER_PIN_4, LOW);
+//       break;
+//     }
+//     stepNumber++;
+//     if(stepNumber > 3){
+//         stepNumber = 0;
+//     }
+// }
 
-        delay(DELAY_ONE_STEP);
-    }
-
-    // delay(DELAY_MOVE);
-}
+// void move(int stepPrecision){
+//     int precisionCounter = 0;
+//     while(precisionCounter < stepPrecision){
+//         oneStep();
+//         precisionCounter++;
+//         delay(DELAY_ONE_STEP);
+//     }
+// }
 
 int main() {
+    // wiringPiSetupGpio();
 
-    wiringPiSetupGpio();
-
-    pinMode(STEPPER_PIN_1, OUTPUT);
-    pinMode(STEPPER_PIN_2, OUTPUT);
-    pinMode(STEPPER_PIN_3, OUTPUT);
-    pinMode(STEPPER_PIN_4, OUTPUT);
+    // pinMode(STEPPER_PIN_1, OUTPUT);
+    // pinMode(STEPPER_PIN_2, OUTPUT);
+    // pinMode(STEPPER_PIN_3, OUTPUT);
+    // pinMode(STEPPER_PIN_4, OUTPUT);
 
     int i = 0;
-    int numItt = 20;
     double theta = 0;
-    double thetaInc = 360.0 / numItt;
-    double motorPos = 0;
-    double motorPosI = 400.0 / numItt;
+    int counter = 0;
 
     vector<vector<Vertex>> meshPoints;
     vector<int> lineLength;
-    // double theta = 0.0;
 
-    auto t_start = std::chrono::high_resolution_clock::now();
-    for(int counter=0; theta<=360; counter++) {
-        cv::VideoCapture cap(0);
-        if (!cap.isOpened()) {
-            cout << "Error: Camera not found" << endl;
-            return 1;
-        }
+    while(theta <= 360) {
+        // cv::VideoCapture cap(0);
+        // if (!cap.isOpened()) {
+        //     cout << "Error: Camera not found" << endl;
+        //     return 1;
+        // }
+        // cv::Mat img;
+        // cap >> img;
+        // cap.release();
         cv::Mat img;
-        cap >> img;
-        cap.release();
 
-        // cv::imshow("original image", img);
-        // std::cout << img.rows << ", " << img.cols << std::endl;
-        std::string save_path = "imgs/original/" + std::to_string(counter) + ".jpg";
-        if(!cv::imwrite(save_path, img)) {
-            std::cerr << "an error occured\n";
-        }
+        std::string save_path = "/home/barisayyildiz/cse396-codes/converter/imgs_db/original/" + std::to_string(counter) + ".jpg";
+        img = cv::imread(save_path);
 
-        // img = cv::imread("test_image.jpg");
-
-        // std::cout << img.rows << "," << img.cols << std::endl;
+        // save_path = "imgs/original/" + std::to_string(counter) + ".jpg";
+        // cv::imwrite(save_path, img);
 
         Point2f pts[4];
-        pts[0] = { 236.0, 185.0 };
-        pts[1] = { 880.0, 324.0 };
-        pts[2] = { 873.0, 682.0 };
-        pts[3] = { 245.0, 857.0 };
+        pts[0] = { 277.0, 90.0 };
+        pts[1] = { 733.0, 90.0 };
+        pts[2] = { 733.0, 634.0 };
+        pts[3] = { 277.0, 634.0 };
 
         img = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
-        save_path = "imgs/four_points/" + std::to_string(counter) + ".jpg";
-        if(!cv::imwrite(save_path, img)) {
-            std::cerr << "an error occured\n";
-        }
+        save_path = "imgs_db/four_points/" + std::to_string(counter) + ".jpg";
+        cv::imwrite(save_path, img);
 
-        // cv::imshow("transformed", img);
-
-        Mat red_line;
-        // B, G, R
-        Scalar lowerb(0, 0, 50);
-        Scalar upperb(255, 255, 255);
-        cv::inRange(img, lowerb, upperb, red_line);
-
-        save_path = "imgs/red_line/" + std::to_string(counter) + ".jpg";
-        if(!cv::imwrite(save_path, red_line)) {
-            std::cerr << "an error occured\n";
-        }
-        
-        // Create windows and display images
-        // cv::namedWindow("Original Image", cv::WINDOW_NORMAL);
-        // cv::imshow("Original Image", img);
-
-        // cv::namedWindow("Red Line Image", cv::WINDOW_NORMAL);
-        // cv::imshow("Red Line Image", red_line);
-        // std::string save_path = "imgs/" + std::to_string(counter++) + ".jpg";
-        // if (!cv::imwrite(save_path, red_line)) {
-        //     std::cerr << "An error occurred while saving the image." << std::endl;
-        // }
-
-        Mat backG;
+        int h = img.rows;
+        int w = img.cols;
+        Mat backG = Mat::zeros(h, w, CV_32F);
         int bottomR = 0;
+        int topR = 0;
         vector<Vertex> tempV;
-
-        int h = red_line.rows;
-        int w = red_line.cols;
-
-        backG = Mat::zeros(h, w, CV_32F);
-
-        // cv::imshow("background", backG);
 
         cv::Mat modified = backG.clone();
 
-        for(int r=0; r<h; r++) {
-            int total = 0;
-            int counter = 0;
-            for(int c=0; c<w; c++) {
-                if(red_line.at<uchar>(r,c) != 0) {
-                    total += c;
-                    counter++;
-                    // std::cout << "(" << r << "," << c << ")" << std::endl;
-                    backG.at<float>(r, c) = 1.0;
-                    // bottomR = r;
-                    break;
+        for(int i=0; i<h; i++) {
+            int max = -1;
+            int cIndex = -1;
+            for(int j=0; j<w; j++) {
+                int current = img.at<cv::Vec3b>(i, j)[2];
+                if(current > max) {
+                    cIndex = j;
+                    max = current;
                 }
             }
-            // if(counter == 0) {
-            //     continue;
-            // }
-            // backG.at<float>(r, total/counter) = 1.0;
+            if(img.at<cv::Vec3b>(i, cIndex)[2] > 25) {
+                backG.at<uchar>(i, cIndex) = 1;
+                bottomR = i;
+                if(topR == 0) {
+                    topR = i;
+                }
+            }
         }
+        save_path = "imgs_db/red_line/" + std::to_string(counter) + ".jpg";
+        cv::imwrite(save_path, backG);
 
-        // cv::imshow("background", backG);
-
-        cv::Mat saveImage;
-        cv::normalize(backG, saveImage, 0, 255, cv::NORM_MINMAX, CV_8U);
-
-        save_path = "imgs/final/" + std::to_string(counter) + ".jpg";
-        if (!cv::imwrite(save_path, saveImage)) {
-            std::cerr << "An error occurred while saving the image." << std::endl;
-        }
-        
-        // int centerC = w / 2; // center column
-        int centerC = 420;
-        // std::cout << "width: " << w << ", height: " << h << std::endl;
-        // std::cout << "bottomR: " << bottomR << std::endl;
-        // std::cout << "centerC: " << centerC << std::endl;
-
+        int centerC = 275;
         for (int r = 0; r < h; r++) {
             int cIndex = 0;
             for (int c = 0; c < w; c++) {
-                if (backG.at<float>(r, c) == 1) {
-                    int H = r - bottomR;
-                    int dist = c - centerC;
+                if (backG.at<uchar>(r, c) == 1) {
+                    double H = r - bottomR;
+                    double dist = c - centerC;
                     double t = theta * (M_PI / 180.0); // Convert degrees to radians
+                    Vertex coord(H, t, dist);
                     tempV.push_back(Vertex(H, t, dist));
                 }
             }
         }
 
-        // std::cout << tempV.size() << std::endl;
-
-        int intv = 20; // Vertical resolution
+        int intv = 350; // Vertical resolution
         intv = tempV.size() / intv;
-
-        // std::cout << "intv : " << intv << std::endl;
 
         if (!tempV.empty() && intv != 0) {
             vector<Vertex> V;
@@ -358,32 +263,18 @@ int main() {
             }
 
             V.push_back(tempV[tempV.size() - 1]);
-            // std::cout << "v size : " << V.size() << std::endl;
             meshPoints.push_back(V);
             lineLength.push_back(-1 * V.size());
         }
 
         std::cout << "theta: " << theta << std::endl;
-        // std::cout << "meshPoints length: " << meshPoints.size() << std::endl << std::endl;
 
-        delay(100);
-        move(true, STEP_PER_MOVEMENT);
+        // move(true, STEP_PER_MOVEMENT);
         theta = theta + static_cast<double>((360.0 / (2048 / STEP_PER_MOVEMENT)));
-
-        // delay(30);
-        // // theta += thetaInc;
-        // // // Step the motor
-        // // i = step(static_cast<int>(motorPosI), i);
-        // // usleep(300000);
-        // // theta += thetaInc;
-        
+        counter++;
     }
 
-    // std::cout << meshPoints.at(0).size() << std::endl;
-
     int shortest = meshPoints[distance(lineLength.begin(), max_element(lineLength.begin(), lineLength.end()))].size();
-
-    // std::cout << "shortest : " << shortest << std::endl;
 
     for (vector<vector<Vertex>>::iterator it = meshPoints.begin(); it != meshPoints.end(); ++it) {
         while (it->size() > shortest) {
@@ -391,12 +282,11 @@ int main() {
         }
     }
 
-    // std::cout << "mesh point first item size : " << meshPoints.at(0).size() << std::endl;
-
     vector<Vertex> points;
     vector<Face> faces;
     vector<int> firstRow;
     vector<int> prevRow;
+    vector<int> lastVertices;
 
     for (int index = 0; index < meshPoints[0].size(); ++index) {
         points.push_back(getVertex(meshPoints[0][index]));
@@ -441,9 +331,33 @@ int main() {
                     faces.push_back(f4);
                 }
             }
-
+            lastVertices.push_back(prevRow.back());
             prevRow = currentRow;
         }
+    }
+    
+    for(int i=0; i<lastVertices.size()-1; i++) {
+        faces.push_back(Face(lastVertices.at(0), lastVertices.at(i), lastVertices.at(i+1)));
+    }
+
+    double minValues[3] = {std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()};
+    double maxValues[3] = {-std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity()};
+
+    // Calculate min and max values
+    for (const Vertex& point : points) {
+        double x = point.x, y = point.y, z = point.z;
+        for (int i = 0; i < 3; ++i) {
+            minValues[i] = std::min(minValues[i], std::min({x, y, z}));
+            maxValues[i] = std::max(maxValues[i], std::max({x, y, z}));
+        }
+    }
+
+    // Normalize vertices
+    double ranges[3] = {maxValues[0] - minValues[0], maxValues[1] - minValues[1], maxValues[2] - minValues[2]};
+    for(int i=0; i<points.size(); i++) {
+        points.at(i).x = (points.at(i).x - minValues[0]) / ranges[0];
+        points.at(i).y  = (points.at(i).y - minValues[1]) / ranges[1];
+        points.at(i).z  = (points.at(i).z - minValues[2]) / ranges[2];
     }
 
     // create .obj file
@@ -452,24 +366,17 @@ int main() {
 
     if (file.is_open()) {
         for (Vertex& point : points) {
-            file << point.write() << "\n";
+            file << point;
         }
-
-        for (Face& f : faces) {
-            file << f.write() << "\n";
+        for (Face& face : faces) {
+            file << face;
         }
-
         file.close();
     } else {
         std::cerr << "Error: Unable to open file for writing." << std::endl;
     }
 
     // cv::waitKey(0);
-    auto t_end = std::chrono::high_resolution_clock::now();
-    double elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-    std::cout << "elapsed time : " << elapsed_time_ms << std::endl;
 
     return 0;
 }
-
-

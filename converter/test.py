@@ -1,7 +1,3 @@
-# ECE 5725
-# Michael Xiao (mfx2) and Thomas Scavella (tbs47)
-# 3D scanner software
-
 import cv2
 import numpy as np
 import math
