@@ -43,7 +43,7 @@ public:
     Face(int v1, int v2, int v3) : v1(v1), v2(v2), v3(v3) {}
 
     friend std::ostream& operator<<(std::ostream& os, const Face& face) {
-        os << "f " << face.v1 << " " << face.v2 << " " << face.v3 << "\n";
+        os << "f " << face.v1 << "/" << face.v1 << " " << face.v2 << "/" << face.v2 << " " << face.v3 << "/" << face.v3 << "\n";
         return os;
     }
 };
