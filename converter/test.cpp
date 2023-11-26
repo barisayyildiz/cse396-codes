@@ -26,6 +26,8 @@
 using namespace cv;
 using namespace std;
 
+bool FEATURE_COMMUNICATION = false;
+
 void signalCallbackHandler(int signum) {
     std::cout << "Caught signal " << signum << std::endl;
     close(dataSocket);
@@ -35,34 +37,36 @@ void signalCallbackHandler(int signum) {
 
 int main() {
     // handle ctrl+c signal
-    signal(SIGINT, signalCallbackHandler);
-    srand(time(0));
+    if(FEATURE_COMMUNICATION) {
+        signal(SIGINT, signalCallbackHandler);
+        srand(time(0));
 
-    // std::thread t1(readConfig, std::ref(configSocket));
-    // t1.detach();
+        // std::thread t1(readConfig, std::ref(configSocket));
+        // t1.detach();
 
-    // Create a socket for the client
-    dataSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (dataSocket == -1) {
-        std::cerr << "Error creating client socket." << std::endl;
-        return 1;
+        // Create a socket for the client
+        dataSocket = socket(AF_INET, SOCK_STREAM, 0);
+        if (dataSocket == -1) {
+            std::cerr << "Error creating client socket." << std::endl;
+            return 1;
+        }
+
+        // Define the server address and port to connect to
+        sockaddr_in serverAddress;
+        serverAddress.sin_family = AF_INET;
+        serverAddress.sin_port = htons(DATA_PORT);
+        serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+        // Connect to the server
+        if (connect(dataSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
+            std::cerr << "Error connecting to the server." << std::endl;
+            return 1;
+        }
+
+        memset(buffer, '\0', BUFFER_SIZE);
+        sprintf(buffer, "RUNNING");
+        send(dataSocket, buffer, sizeof(buffer), 0);
     }
-
-    // Define the server address and port to connect to
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(DATA_PORT);
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    // Connect to the server
-    if (connect(dataSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
-        std::cerr << "Error connecting to the server." << std::endl;
-        return 1;
-    }
-
-    memset(buffer, '\0', BUFFER_SIZE);
-    sprintf(buffer, "RUNNING");
-    send(dataSocket, buffer, sizeof(buffer), 0);
 
     // wiringPiSetupGpio();
 
@@ -168,20 +172,22 @@ int main() {
         }
 
         std::cout << "theta: " << theta << std::endl;
-        
-        // read the message from desktop for synchronization
-        memset(buffer, '\0', BUFFER_SIZE);
-        recv(dataSocket, buffer, sizeof(buffer), 0);
-        
-        memset(buffer, '\0', BUFFER_SIZE);
-        sprintf(buffer, "%d %d", counter+1, 2048 / STEP_PER_MOVEMENT);
-        send(dataSocket, buffer, sizeof(buffer), 0);
 
-        memset(buffer, '\0', BUFFER_SIZE);
-        sprintf(buffer, "%d", (int)meshPoints.back().size());
-        send(dataSocket, buffer, sizeof(buffer), 0);
-        printf("size: %s\n", buffer);
-        usleep(300000);
+        if(FEATURE_COMMUNICATION) {
+            // read the message from desktop for synchronization
+            memset(buffer, '\0', BUFFER_SIZE);
+            recv(dataSocket, buffer, sizeof(buffer), 0);
+            
+            memset(buffer, '\0', BUFFER_SIZE);
+            sprintf(buffer, "%d %d", counter+1, 2048 / STEP_PER_MOVEMENT);
+            send(dataSocket, buffer, sizeof(buffer), 0);
+
+            memset(buffer, '\0', BUFFER_SIZE);
+            sprintf(buffer, "%d", (int)meshPoints.back().size());
+            send(dataSocket, buffer, sizeof(buffer), 0);
+            printf("size: %s\n", buffer);
+            usleep(300000);
+        }
 
         vector<Vertex> vertices = meshPoints.back();
         uint numOfScannedPoints = vertices.size();
@@ -219,7 +225,7 @@ int main() {
     vector<int> lastVertices;
 
     for (int index = 0; index < meshPoints[0].size(); ++index) {
-        points.push_back(getVertex(meshPoints[0][index]));
+        points.push_back(meshPoints[0][index]);
         firstRow.push_back(index + 1);
     }
 
@@ -241,11 +247,11 @@ int main() {
                 faces.push_back(f1);
                 faces.push_back(f2);
 
-                points.push_back(getVertex(meshPoints[col][point]));
+                points.push_back(meshPoints[col][point]);
                 currentRow.push_back(tl);
 
                 if (point == meshPoints[col].size() - 2) {
-                    points.push_back(getVertex(meshPoints[col][point + 1]));
+                    points.push_back(meshPoints[col][point + 1]);
                     currentRow.push_back(bl);
                 }
 
