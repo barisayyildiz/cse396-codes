@@ -432,7 +432,8 @@ CMakeFiles/test.dir/test.cpp.o: test.cpp \
   /usr/include/c++/11/fstream \
   /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
-  /usr/include/c++/11/bits/fstream.tcc
+  /usr/include/c++/11/bits/fstream.tcc \
+  header/scanner.h
 
 
 /usr/include/c++/11/bits/fstream.tcc:
@@ -836,6 +837,8 @@ CMakeFiles/test.dir/test.cpp.o: test.cpp \
 /usr/include/x86_64-linux-gnu/asm/errno.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
+
+header/scanner.h:
 
 /usr/include/x86_64-linux-gnu/bits/uintn-identity.h:
 

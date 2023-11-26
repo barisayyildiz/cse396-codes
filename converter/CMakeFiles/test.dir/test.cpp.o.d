@@ -1,5 +1,5 @@
 CMakeFiles/test.dir/test.cpp.o: \
- /home/barisayyildiz/test_code_raspberry/converter/test.cpp \
+ /home/barisayyildiz/cse396-codes/converter/test.cpp \
  /usr/include/stdc-predef.h /usr/local/include/opencv4/opencv2/opencv.hpp \
  /usr/local/include/opencv4/opencv2/opencv_modules.hpp \
  /usr/local/include/opencv4/opencv2/core.hpp \
@@ -368,4 +368,5 @@ CMakeFiles/test.dir/test.cpp.o: \
  /usr/include/linux/close_range.h /usr/include/c++/11/fstream \
  /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
- /usr/include/c++/11/bits/fstream.tcc
+ /usr/include/c++/11/bits/fstream.tcc \
+ /home/barisayyildiz/cse396-codes/converter/header/scanner.h
