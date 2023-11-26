@@ -3,10 +3,8 @@ project(Scanner)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(header)
-add_executable(test test.cpp source/scanner.cpp)
+add_executable(test test.cpp source/scanner.cpp source/communication_layer.cpp)
 target_link_libraries( test ${OpenCV_LIBS} )
-
-
 
 
 # cmake_minimum_required(VERSION 2.8)

@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/test.dir/source/communication_layer.cpp.o"
+  "CMakeFiles/test.dir/source/communication_layer.cpp.o.d"
   "CMakeFiles/test.dir/source/scanner.cpp.o"
   "CMakeFiles/test.dir/source/scanner.cpp.o.d"
   "CMakeFiles/test.dir/test.cpp.o"

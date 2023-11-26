@@ -8,6 +8,8 @@
             "args": [
                 "-g",
                 "${workspaceFolder}/converter/test.cpp",
+                "${workspaceFolder}/converter/source/scanner.cpp",
+                "${workspaceFolder}/converter/source/communication_layer.cpp",
                 "-o",
                 "${workspaceFolder}/converter/test",
                 "-I/usr/local/include/opencv4",

@@ -129,6 +129,30 @@ test/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/build
 .PHONY : test/fast
 
+source/communication_layer.o: source/communication_layer.cpp.o
+.PHONY : source/communication_layer.o
+
+# target to build an object file
+source/communication_layer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/source/communication_layer.cpp.o
+.PHONY : source/communication_layer.cpp.o
+
+source/communication_layer.i: source/communication_layer.cpp.i
+.PHONY : source/communication_layer.i
+
+# target to preprocess a source file
+source/communication_layer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/source/communication_layer.cpp.i
+.PHONY : source/communication_layer.cpp.i
+
+source/communication_layer.s: source/communication_layer.cpp.s
+.PHONY : source/communication_layer.s
+
+# target to generate assembly for a file
+source/communication_layer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test.dir/build.make CMakeFiles/test.dir/source/communication_layer.cpp.s
+.PHONY : source/communication_layer.cpp.s
+
 source/scanner.o: source/scanner.cpp.o
 .PHONY : source/scanner.o
 
@@ -186,6 +210,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... source/communication_layer.o"
+	@echo "... source/communication_layer.i"
+	@echo "... source/communication_layer.s"
 	@echo "... source/scanner.o"
 	@echo "... source/scanner.i"
 	@echo "... source/scanner.s"
