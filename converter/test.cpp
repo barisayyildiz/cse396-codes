@@ -26,36 +26,12 @@
 using namespace cv;
 using namespace std;
 
-#define BUFFER_SIZE 1024
-
-int dataSocket;
-int configSocket;
-
 void signalCallbackHandler(int signum) {
     std::cout << "Caught signal " << signum << std::endl;
     close(dataSocket);
     close(configSocket);
     exit(signum);
 }
-
-// RUNNING
-
-// readData, her tur sonunda
-// 34,256 -> 34/256 tur
-// 250 -> bu turda işlenen nokta sayısı
-// -178,0,61 -> 1.nokta
-// -174,0,67 -> 2.nokta
-// -182,0,56 -> 3.nokta
-// ...
-
-
-// 35,256 -> 35/256 tur
-// 247 -> bu turda işlenen nokta sayısı
-// -178,0,61 -> 1.nokta
-// -174,0,67 -> 2.nokta
-// -182,0,56 -> 3.nokta
-
-// FINISHED
 
 int main() {
     // handle ctrl+c signal
@@ -84,6 +60,9 @@ int main() {
         return 1;
     }
 
+    memset(buffer, '\0', BUFFER_SIZE);
+    sprintf(buffer, "RUNNING");
+    send(dataSocket, buffer, sizeof(buffer), 0);
 
     // wiringPiSetupGpio();
 
@@ -165,7 +144,7 @@ int main() {
                     double dist = c - centerC;
                     double t = theta * (M_PI / 180.0); // Convert degrees to radians
                     Vertex coord(H, t, dist);
-                    tempV.push_back(Vertex(H, t, dist));
+                    tempV.push_back(getVertex(coord));
                 }
             }
         }
@@ -189,11 +168,41 @@ int main() {
         }
 
         std::cout << "theta: " << theta << std::endl;
+        
+        // read the message from desktop for synchronization
+        memset(buffer, '\0', BUFFER_SIZE);
+        recv(dataSocket, buffer, sizeof(buffer), 0);
+        
+        memset(buffer, '\0', BUFFER_SIZE);
+        sprintf(buffer, "%d %d", counter+1, 2048 / STEP_PER_MOVEMENT);
+        send(dataSocket, buffer, sizeof(buffer), 0);
+
+        memset(buffer, '\0', BUFFER_SIZE);
+        sprintf(buffer, "%d", (int)meshPoints.back().size());
+        send(dataSocket, buffer, sizeof(buffer), 0);
+        printf("size: %s\n", buffer);
+        usleep(300000);
+
+        vector<Vertex> vertices = meshPoints.back();
+        uint numOfScannedPoints = vertices.size();
+
+        for(int i=0; i<numOfScannedPoints; i++) {
+            memset(buffer, '\0', BUFFER_SIZE);
+            double x = vertices.at(i).x, y = vertices.at(i).y, z = vertices.at(i).z;
+
+            sprintf(buffer, "%lf %lf %lf", x, y, z);
+            send(dataSocket, buffer, sizeof(buffer), 0);
+            recv(dataSocket, buffer, sizeof(buffer), 0);
+        }
 
         // move(true, STEP_PER_MOVEMENT);
         theta = theta + static_cast<double>((360.0 / (2048 / STEP_PER_MOVEMENT)));
         counter++;
     }
+
+    memset(buffer, '\0', BUFFER_SIZE);
+    sprintf(buffer, "%s", "FINISHED");
+    send(dataSocket, buffer, sizeof(buffer), 0);
 
     int shortest = meshPoints[distance(lineLength.begin(), max_element(lineLength.begin(), lineLength.end()))].size();
 

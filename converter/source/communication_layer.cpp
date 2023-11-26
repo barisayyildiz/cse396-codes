@@ -12,6 +12,10 @@
 #include <cstdlib>  
 #include <ctime> 
 
+int dataSocket;
+int configSocket;
+char buffer[BUFFER_SIZE];
+
 int readConfig(int& socketId) {
     socketId = socket(AF_INET, SOCK_STREAM, 0);
     if (socketId == -1) {
