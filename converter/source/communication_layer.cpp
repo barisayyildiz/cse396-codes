@@ -88,3 +88,47 @@ int readConfig(int& socketId) {
     
     return 0;
 }
+
+std::string getIpAddress() {
+    const char* interface = "wlan0";
+
+    int pipe_fd[2];
+    if (pipe(pipe_fd) == -1) {
+        perror("pipe");
+        exit(1);
+    }
+
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        perror("fork");
+        exit(1);
+    }
+
+    if (pid == 0) { // Child process
+        // Close the read end of the pipe
+        close(pipe_fd[0]);
+
+        // Redirect stdout to the write end of the pipe
+        dup2(pipe_fd[1], STDOUT_FILENO);
+        close(pipe_fd[1]);
+
+        // Execute the command using execl
+        execl("/bin/sh", "sh", "-c", ("ifconfig " + std::string(interface) + " | grep 'inet ' | awk '{print $2}'").c_str(), NULL);
+
+        // If execl fails
+        perror("execl");
+        exit(1);
+    } else { // Parent process
+        // Close the write end of the pipe
+        close(pipe_fd[1]);
+
+        // Read the output from the pipe
+        char buffer[128];
+        ssize_t bytesRead = read(pipe_fd[0], buffer, sizeof(buffer));
+        close(pipe_fd[0]);
+
+        std::string ipAddress(buffer, bytesRead - 1);
+        return ipAddress;
+    }
+}
