@@ -18,7 +18,7 @@
 // for signal handling
 #include <signal.h>
 
-// #include <wiringPi.h>
+#include <wiringPi.h>
 #include <chrono>
 #include "header/scanner.h"
 #include "header/communication_layer.h"
@@ -68,12 +68,12 @@ int main() {
         send(dataSocket, buffer, sizeof(buffer), 0);
     }
 
-    // wiringPiSetupGpio();
+    wiringPiSetupGpio();
 
-    // pinMode(STEPPER_PIN_1, OUTPUT);
-    // pinMode(STEPPER_PIN_2, OUTPUT);
-    // pinMode(STEPPER_PIN_3, OUTPUT);
-    // pinMode(STEPPER_PIN_4, OUTPUT);
+    pinMode(STEPPER_PIN_1, OUTPUT);
+    pinMode(STEPPER_PIN_2, OUTPUT);
+    pinMode(STEPPER_PIN_3, OUTPUT);
+    pinMode(STEPPER_PIN_4, OUTPUT);
 
     int i = 0;
     double theta = 0;
@@ -92,21 +92,26 @@ int main() {
         // cap >> img;
         // cap.release();
         cv::Mat img;
+        
+        std::string save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
+        // img = cv::imread(save_path);
 
-        std::string save_path = "/home/barisayyildiz/cse396-codes/converter/imgs_db/original/" + std::to_string(counter) + ".jpg";
-        img = cv::imread(save_path);
+        char filename[] = "output.jpg";
+	    takePic(filename);
+        img = cv::imread(filename);
+        // sleep(1);
 
-        // save_path = "imgs/original/" + std::to_string(counter) + ".jpg";
-        // cv::imwrite(save_path, img);
+        save_path = "imgs/original/" + std::to_string(counter) + ".jpg";
+        cv::imwrite(save_path, img);
 
         Point2f pts[4];
-        pts[0] = { 277.0, 90.0 };
-        pts[1] = { 733.0, 90.0 };
-        pts[2] = { 733.0, 634.0 };
-        pts[3] = { 277.0, 634.0 };
+        pts[0] = { 312.0, 165.0 };
+        pts[1] = { 622.0, 165.0 };
+        pts[2] = { 622.0, 696.0 };
+        pts[3] = { 312.0, 696.0 };
 
         img = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
-        save_path = "imgs_db/four_points/" + std::to_string(counter) + ".jpg";
+        save_path = "imgs/four_points/" + std::to_string(counter) + ".jpg";
         cv::imwrite(save_path, img);
 
         int h = img.rows;
@@ -136,10 +141,10 @@ int main() {
                 }
             }
         }
-        save_path = "imgs_db/red_line/" + std::to_string(counter) + ".jpg";
-        cv::imwrite(save_path, backG);
+        save_path = "imgs/red_line/" + std::to_string(counter) + ".jpg";
+        cv::imwrite(save_path, backG*255);
 
-        int centerC = 275;
+        int centerC = 190;
         for (int r = 0; r < h; r++) {
             int cIndex = 0;
             for (int c = 0; c < w; c++) {
@@ -153,15 +158,17 @@ int main() {
             }
         }
 
-        int intv = 350; // Vertical resolution
+        int intv = 550; // Vertical resolution
         intv = tempV.size() / intv;
 
-        if (!tempV.empty() && intv != 0) {
+        if (!tempV.empty()) {
             vector<Vertex> V;
             V.push_back(tempV[0]);
 
             for (int ind = 1; ind < tempV.size() - 2; ind++) {
-                if (ind % intv == 0) {
+                if(intv == 0) {
+                    V.push_back(tempV[ind]);
+                } else if (ind % intv == 0) {
                     V.push_back(tempV[ind]);
                 }
             }
@@ -172,6 +179,7 @@ int main() {
         }
 
         std::cout << "theta: " << theta << std::endl;
+        std::cout << meshPoints.back().size() << std::endl;
 
         if(FEATURE_COMMUNICATION) {
             // read the message from desktop for synchronization
@@ -192,16 +200,19 @@ int main() {
         vector<Vertex> vertices = meshPoints.back();
         uint numOfScannedPoints = vertices.size();
 
-        for(int i=0; i<numOfScannedPoints; i++) {
-            memset(buffer, '\0', BUFFER_SIZE);
-            double x = vertices.at(i).x, y = vertices.at(i).y, z = vertices.at(i).z;
+        if(FEATURE_COMMUNICATION) {
+            for(int i=0; i<numOfScannedPoints; i++) {
+                memset(buffer, '\0', BUFFER_SIZE);
+                double x = vertices.at(i).x, y = vertices.at(i).y, z = vertices.at(i).z;
 
-            sprintf(buffer, "%lf %lf %lf", x, y, z);
-            send(dataSocket, buffer, sizeof(buffer), 0);
-            recv(dataSocket, buffer, sizeof(buffer), 0);
+                sprintf(buffer, "%lf %lf %lf", x, y, z);
+                send(dataSocket, buffer, sizeof(buffer), 0);
+                recv(dataSocket, buffer, sizeof(buffer), 0);
+            }
         }
 
-        // move(true, STEP_PER_MOVEMENT);
+        move(STEP_PER_MOVEMENT);
+        
         theta = theta + static_cast<double>((360.0 / (2048 / STEP_PER_MOVEMENT)));
         counter++;
     }
