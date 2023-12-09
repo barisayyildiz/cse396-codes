@@ -97,7 +97,7 @@ int main() {
         // img = cv::imread(save_path);
 
         char filename[] = "output.jpg";
-	    takePic(filename);
+	      takePic(filename);
         img = cv::imread(filename);
         // sleep(1);
 
@@ -110,13 +110,13 @@ int main() {
         pts[2] = { 622.0, 696.0 };
         pts[3] = { 312.0, 696.0 };
 
-        img = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
-        save_path = "imgs/four_points/" + std::to_string(counter) + ".jpg";
-        cv::imwrite(save_path, img);
+        cropped = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
+        save_path = "imgs_db/four_points/" + std::to_string(counter) + ".jpg";
+        cv::imwrite(save_path, cropped);
 
-        int h = img.rows;
-        int w = img.cols;
-        Mat backG = Mat::zeros(h, w, CV_32F);
+        int h = cropped.rows;
+        int w = cropped.cols;
+        Mat backG = Mat::zeros(h, w, CV_8U);
         int bottomR = 0;
         int topR = 0;
         vector<Vertex> tempV;
@@ -127,13 +127,13 @@ int main() {
             int max = -1;
             int cIndex = -1;
             for(int j=0; j<w; j++) {
-                int current = img.at<cv::Vec3b>(i, j)[2];
+                int current = cropped.at<cv::Vec3b>(i, j)[2];
                 if(current > max) {
                     cIndex = j;
                     max = current;
                 }
             }
-            if(img.at<cv::Vec3b>(i, cIndex)[2] > 25) {
+            if(cropped.at<cv::Vec3b>(i, cIndex)[2] > 25) {
                 backG.at<uchar>(i, cIndex) = 1;
                 bottomR = i;
                 if(topR == 0) {
@@ -141,7 +141,7 @@ int main() {
                 }
             }
         }
-        save_path = "imgs/red_line/" + std::to_string(counter) + ".jpg";
+        save_path = "imgs_db/red_line/" + std::to_string(counter) + ".jpg";
         cv::imwrite(save_path, backG*255);
 
         int centerC = 190;
@@ -205,9 +205,37 @@ int main() {
                 memset(buffer, '\0', BUFFER_SIZE);
                 double x = vertices.at(i).x, y = vertices.at(i).y, z = vertices.at(i).z;
 
-                sprintf(buffer, "%lf %lf %lf", x, y, z);
+                 sprintf(buffer, "%lf %lf %lf", x, y, z);
                 send(dataSocket, buffer, sizeof(buffer), 0);
                 recv(dataSocket, buffer, sizeof(buffer), 0);
+            }
+
+            // send image size
+            std::vector<uchar> imageBuffer;
+            imencode(".jpg", img, imageBuffer);
+            int imgSize = imageBuffer.size();
+            send(dataSocket, &imgSize, sizeof(int), 0);
+            
+            // send image
+            int chunkSize = 1024; // Choose an appropriate chunk size
+            for (int i = 0; i <imgSize; i += chunkSize) {
+                int remaining = std::min(chunkSize, imgSize - i);
+                send(dataSocket, imageBuffer.data() + i, remaining, 0);
+                recv(dataSocket, buffer, BUFFER_SIZE, 0);
+            }
+
+            // send image size
+            imageBuffer;
+            imencode(".jpg", backG*255, imageBuffer);
+            imgSize = imageBuffer.size();
+            send(dataSocket, &imgSize, sizeof(int), 0);
+            
+            // send image
+            chunkSize = 1024; // Choose an appropriate chunk size
+            for (int i = 0; i <imgSize; i += chunkSize) {
+                int remaining = std::min(chunkSize, imgSize - i);
+                send(dataSocket, imageBuffer.data() + i, remaining, 0);
+                recv(dataSocket, buffer, BUFFER_SIZE, 0);
             }
         }
 
