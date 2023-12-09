@@ -1,7 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-// #include <wiringPi.h>
+#include <wiringPi.h>
 #include <unistd.h>
 #include <vector>
 #include <cmath>
@@ -57,45 +57,55 @@ Vertex getVertex(Vertex pCoord) {
     return Vertex((int)x, (int)y, (int)z);
 }
 
-// void oneStep(bool direction){
-//     // std::cout << "counter : " << ++counter << std::endl;
-//     switch(stepNumber){
-//       case 0:
-//       digitalWrite(STEPPER_PIN_1, LOW);
-//       digitalWrite(STEPPER_PIN_2, LOW);
-//       digitalWrite(STEPPER_PIN_3, LOW);
-//       digitalWrite(STEPPER_PIN_4, HIGH);
-//       break;
-//       case 1:
-//       digitalWrite(STEPPER_PIN_1, LOW);
-//       digitalWrite(STEPPER_PIN_2, LOW);
-//       digitalWrite(STEPPER_PIN_3, HIGH);
-//       digitalWrite(STEPPER_PIN_4, LOW);
-//       break;
-//       case 2:
-//       digitalWrite(STEPPER_PIN_1, LOW);
-//       digitalWrite(STEPPER_PIN_2, HIGH);
-//       digitalWrite(STEPPER_PIN_3, LOW);
-//       digitalWrite(STEPPER_PIN_4, LOW);
-//       break;
-//       case 3:
-//       digitalWrite(STEPPER_PIN_1, HIGH);
-//       digitalWrite(STEPPER_PIN_2, LOW);
-//       digitalWrite(STEPPER_PIN_3, LOW);
-//       digitalWrite(STEPPER_PIN_4, LOW);
-//       break;
-//     }
-//     stepNumber++;
-//     if(stepNumber > 3){
-//         stepNumber = 0;
-//     }
-// }
+void oneStep(){
+    // std::cout << "counter : " << ++counter << std::endl;
+    switch(stepNumber){
+      case 0:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, HIGH);
+      break;
+      case 1:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, HIGH);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+      case 2:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, HIGH);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+      case 3:
+      digitalWrite(STEPPER_PIN_1, HIGH);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+    }
+    stepNumber++;
+    if(stepNumber > 3){
+        stepNumber = 0;
+    }
+}
 
-// void move(int stepPrecision){
-//     int precisionCounter = 0;
-//     while(precisionCounter < stepPrecision){
-//         oneStep();
-//         precisionCounter++;
-//         delay(DELAY_ONE_STEP);
-//     }
-// }
+void move(int stepPrecision){
+    int precisionCounter = 0;
+    while(precisionCounter < stepPrecision){
+        oneStep();
+        precisionCounter++;
+        delay(DELAY_ONE_STEP);
+    }
+}
+
+void takePic (char* filename)
+{
+	int pid, status;
+	if((pid = fork()) == 0)
+	{
+		execl("/usr/bin/raspistill", "raspistill", "-t", "200", "-w", "1024", "-h", "768", "-o", filename, (char *)NULL);
+	}
+	waitpid(pid, &status, 0);
+}

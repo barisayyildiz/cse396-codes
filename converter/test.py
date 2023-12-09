@@ -19,7 +19,7 @@ for pin in control_pins:
   GPIO.setup(pin, GPIO.OUT)
   GPIO.output(pin, 0)
 
-STEP_PER_MOVEMENT = 16
+STEP_PER_MOVEMENT = 32
 DELAY_ONE_STEP = 0.003
 stepNumber = 0
 
@@ -172,7 +172,7 @@ while (1):
 		# cap.release()
 		camera = PiCamera()
 		camera.start_preview()
-		sleep(0.2)
+		sleep(1)
 		camera.capture('lineDetection.jpg')
 		camera.close()
 		img = cv2.imread('lineDetection.jpg')
@@ -216,10 +216,10 @@ while (1):
 				bottomR = r
 				if topR == 0:
 					topR = r
-		for r in range(topR, bottomR):
-			cIndex = np.argmax(img[r, :, 2])
-			if img[r, cIndex, 2] > 5:
-				backG[r, cIndex] = 1
+		# for r in range(topR, bottomR):
+		# 	cIndex = np.argmax(img[r, :, 2])
+		# 	if img[r, cIndex, 2] > 5:
+		# 		backG[r, cIndex] = 1
 
 		cv2.imwrite(f"imgs/red_line/{counter}.jpg", (backG * 255).astype(np.uint8))
 		# cv2.imshow("backg", backG)
@@ -241,7 +241,7 @@ while (1):
 
 		tempV = []
 		r = 0
-		centerC = 275.0 #center column TODO ne olduğunu anla
+		centerC = 300.0 #center column TODO ne olduğunu anla
 		for cIndex in np.argmax(backG,axis=1):
 			if(backG[r,cIndex] == 1):
 				#intvi = 0
@@ -252,7 +252,7 @@ while (1):
 			r += 1
 
 		# vertical resolution
-		intv = 400
+		intv = 100
 		intv = len(tempV)//intv
 
 		if(len(tempV) != 0 and intv != 0):

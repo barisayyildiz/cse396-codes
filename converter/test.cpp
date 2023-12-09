@@ -18,7 +18,7 @@
 // for signal handling
 #include <signal.h>
 
-// #include <wiringPi.h>
+#include <wiringPi.h>
 #include <chrono>
 #include "header/scanner.h"
 #include "header/communication_layer.h"
@@ -68,12 +68,12 @@ int main() {
         send(dataSocket, buffer, sizeof(buffer), 0);
     }
 
-    // wiringPiSetupGpio();
+    wiringPiSetupGpio();
 
-    // pinMode(STEPPER_PIN_1, OUTPUT);
-    // pinMode(STEPPER_PIN_2, OUTPUT);
-    // pinMode(STEPPER_PIN_3, OUTPUT);
-    // pinMode(STEPPER_PIN_4, OUTPUT);
+    pinMode(STEPPER_PIN_1, OUTPUT);
+    pinMode(STEPPER_PIN_2, OUTPUT);
+    pinMode(STEPPER_PIN_3, OUTPUT);
+    pinMode(STEPPER_PIN_4, OUTPUT);
 
     int i = 0;
     double theta = 0;
@@ -92,19 +92,23 @@ int main() {
         // cap >> img;
         // cap.release();
         cv::Mat img;
-        cv::Mat cropped;
-
+        
         std::string save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
-        img = cv::imread(save_path);
+        // img = cv::imread(save_path);
 
-        // save_path = "imgs/original/" + std::to_string(counter) + ".jpg";
-        // cv::imwrite(save_path, img);
+        char filename[] = "output.jpg";
+	      takePic(filename);
+        img = cv::imread(filename);
+        // sleep(1);
+
+        save_path = "imgs/original/" + std::to_string(counter) + ".jpg";
+        cv::imwrite(save_path, img);
 
         Point2f pts[4];
-        pts[0] = { 277.0, 90.0 };
-        pts[1] = { 733.0, 90.0 };
-        pts[2] = { 733.0, 634.0 };
-        pts[3] = { 277.0, 634.0 };
+        pts[0] = { 312.0, 165.0 };
+        pts[1] = { 622.0, 165.0 };
+        pts[2] = { 622.0, 696.0 };
+        pts[3] = { 312.0, 696.0 };
 
         cropped = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
         save_path = "imgs_db/four_points/" + std::to_string(counter) + ".jpg";
@@ -140,7 +144,7 @@ int main() {
         save_path = "imgs_db/red_line/" + std::to_string(counter) + ".jpg";
         cv::imwrite(save_path, backG*255);
 
-        int centerC = 275;
+        int centerC = 190;
         for (int r = 0; r < h; r++) {
             int cIndex = 0;
             for (int c = 0; c < w; c++) {
@@ -154,15 +158,17 @@ int main() {
             }
         }
 
-        int intv = 350; // Vertical resolution
+        int intv = 550; // Vertical resolution
         intv = tempV.size() / intv;
 
-        if (!tempV.empty() && intv != 0) {
+        if (!tempV.empty()) {
             vector<Vertex> V;
             V.push_back(tempV[0]);
 
             for (int ind = 1; ind < tempV.size() - 2; ind++) {
-                if (ind % intv == 0) {
+                if(intv == 0) {
+                    V.push_back(tempV[ind]);
+                } else if (ind % intv == 0) {
                     V.push_back(tempV[ind]);
                 }
             }
@@ -173,6 +179,7 @@ int main() {
         }
 
         std::cout << "theta: " << theta << std::endl;
+        std::cout << meshPoints.back().size() << std::endl;
 
         if(FEATURE_COMMUNICATION) {
             // read the message from desktop for synchronization
@@ -230,10 +237,10 @@ int main() {
                 send(dataSocket, imageBuffer.data() + i, remaining, 0);
                 recv(dataSocket, buffer, BUFFER_SIZE, 0);
             }
-
         }
 
-        // move(true, STEP_PER_MOVEMENT);
+        move(STEP_PER_MOVEMENT);
+        
         theta = theta + static_cast<double>((360.0 / (2048 / STEP_PER_MOVEMENT)));
         counter++;
     }
