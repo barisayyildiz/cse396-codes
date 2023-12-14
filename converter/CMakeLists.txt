@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 project(Scanner)
 find_package(OpenCV REQUIRED)
+find_library(WIRINGPI_LIBRARY wiringPi)
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(header)
 add_executable(test test.cpp source/scanner.cpp source/communication_layer.cpp)
-target_link_libraries( test ${OpenCV_LIBS} )
+target_link_libraries( test ${OpenCV_LIBS} ${WIRINGPI_LIBRARY} )
 
 
 # cmake_minimum_required(VERSION 2.8)

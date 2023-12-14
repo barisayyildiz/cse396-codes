@@ -4,7 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-// #include <wiringPi.h>
+#include <wiringPi.h>
 #include <unistd.h>
 #include <vector>
 #include <cmath>
@@ -20,7 +20,7 @@
 #define STEPPER_PIN_3 8
 #define STEPPER_PIN_4 25
 
-#define STEP_PER_MOVEMENT 64
+#define STEP_PER_MOVEMENT 8
 #define DELAY_ONE_STEP 8
 
 extern int stepNumber;

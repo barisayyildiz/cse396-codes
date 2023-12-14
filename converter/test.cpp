@@ -37,6 +37,26 @@ void signalCallbackHandler(int signum) {
 
 int main() {
     // handle ctrl+c signal
+
+    // std::string ipAddress = getIpAddress();
+
+    // // Create an image with white background
+    // Mat windowImage(300, 400, CV_8UC3, Scalar(0,0,0));
+
+    // // Display the IP address on the image
+    // stringstream text;
+    // text << "Raspberry Pi IP Address: " << ipAddress;
+    
+    // Size textSize = getTextSize(text.str(), FONT_HERSHEY_SIMPLEX, 0.5, 1, 0);
+    // Point textPosition((windowImage.cols - textSize.width) / 2, (windowImage.rows + textSize.height) / 2);
+    // putText(windowImage, text.str(), textPosition, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255, 1), 1);
+
+    // // Show the window with the IP address
+    // namedWindow("Raspberry Pi IP Address", WINDOW_NORMAL);
+    // resizeWindow("Raspberry Pi IP Address", 400, 300);
+    // imshow("Raspberry Pi IP Address", windowImage);
+    // cv::waitKey(0);
+
     if(FEATURE_COMMUNICATION) {
         signal(SIGINT, signalCallbackHandler);
         srand(time(0));
@@ -78,6 +98,7 @@ int main() {
     int i = 0;
     double theta = 0;
     int counter = 0;
+    int centerC = 175;
 
     vector<vector<Vertex>> meshPoints;
     vector<int> lineLength;
@@ -92,12 +113,15 @@ int main() {
         // cap >> img;
         // cap.release();
         cv::Mat img;
+        cv::Mat cropped;
         
-        std::string save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
+        std::string save_path;
+        
+        save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
         // img = cv::imread(save_path);
 
         char filename[] = "output.jpg";
-	      takePic(filename);
+        takePic(filename);
         img = cv::imread(filename);
         // sleep(1);
 
@@ -105,13 +129,13 @@ int main() {
         cv::imwrite(save_path, img);
 
         Point2f pts[4];
-        pts[0] = { 312.0, 165.0 };
-        pts[1] = { 622.0, 165.0 };
-        pts[2] = { 622.0, 696.0 };
-        pts[3] = { 312.0, 696.0 };
+        pts[0] = { 340.0, 244.0 };
+        pts[1] = { 611.0, 244.0 };
+        pts[2] = { 611.0, 747.0 };
+        pts[3] = { 340.0, 747.0 };
 
         cropped = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
-        save_path = "imgs_db/four_points/" + std::to_string(counter) + ".jpg";
+        save_path = "imgs/four_points/" + std::to_string(counter) + ".jpg";
         cv::imwrite(save_path, cropped);
 
         int h = cropped.rows;
@@ -126,7 +150,7 @@ int main() {
         for(int i=0; i<h; i++) {
             int max = -1;
             int cIndex = -1;
-            for(int j=0; j<w; j++) {
+            for(int j=0; j<centerC; j++) {
                 int current = cropped.at<cv::Vec3b>(i, j)[2];
                 if(current > max) {
                     cIndex = j;
@@ -141,10 +165,9 @@ int main() {
                 }
             }
         }
-        save_path = "imgs_db/red_line/" + std::to_string(counter) + ".jpg";
+        save_path = "imgs/red_line/" + std::to_string(counter) + ".jpg";
         cv::imwrite(save_path, backG*255);
 
-        int centerC = 190;
         for (int r = 0; r < h; r++) {
             int cIndex = 0;
             for (int c = 0; c < w; c++) {
