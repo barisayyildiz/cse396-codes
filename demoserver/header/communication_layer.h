@@ -3,6 +3,7 @@
 
 #define DATA_PORT 5000
 #define CONFIG_PORT 4000
+#define SERVER_PORT 3000
 
 #define BUFFER_SIZE 1024
 
@@ -10,9 +11,9 @@
 
 extern int dataSocket;
 extern int configSocket;
-extern char buffer[BUFFER_SIZE];
 
-int readConfig(int& socketId);
+int readConfig();
 std::string getIpAddress();
+void handleClient(int& clientSocket);
 
 #endif

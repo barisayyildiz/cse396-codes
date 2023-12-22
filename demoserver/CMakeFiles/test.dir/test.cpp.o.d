@@ -410,5 +410,9 @@ CMakeFiles/test.dir/test.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
  /usr/include/x86_64-linux-gnu/bits/signal_ext.h \
  /home/barisayyildiz/cse396-codes/demoserver/header/scanner.h \
- /usr/include/x86_64-linux-gnu/sys/wait.h \
+ /usr/include/x86_64-linux-gnu/sys/wait.h /usr/include/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h \
+ /usr/include/linux/falloc.h /usr/include/x86_64-linux-gnu/bits/stat.h \
+ /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
  /home/barisayyildiz/cse396-codes/demoserver/header/communication_layer.h

@@ -13,6 +13,8 @@
 #include <chrono>
 #include <signal.h>
 #include <sys/wait.h>
+#include <pthread.h>
+#include <fcntl.h>
 
 #define STEPPER_PIN_1 1
 #define STEPPER_PIN_2 7
@@ -22,8 +24,23 @@
 #define STEP_PER_MOVEMENT 8
 #define DELAY_ONE_STEP 8
 
+enum ScannerState {
+    RUNNING,
+    FINISHED
+};
+
 extern int stepNumber;
 extern int counter;
+extern pthread_mutex_t scannerStateMutex;
+extern ScannerState scannerState;
+
+struct Configuration {
+    int horizontal_precision, vertical_precision;
+    float top_left_x, top_left_y;
+    float top_right_x, top_right_y;
+    float bottom_right_x, bottom_right_y;
+    float bottom_left_x, bottom_left_y;
+};
 
 class Vertex {
     public:
@@ -54,5 +71,8 @@ public:
 
 cv::Mat fourPointTransform(cv::Mat image, std::vector<cv::Point2f> pts);
 Vertex getVertex(Vertex pCoord);
+void readConfigurationsFile(const char* fileName, Configuration& config);
+void writeConfigurationsFile(const char* fileName, Configuration& config);
+void mainScanner(int& clientSocket);
 
 #endif

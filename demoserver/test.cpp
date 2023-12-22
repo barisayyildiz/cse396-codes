@@ -34,6 +34,55 @@ void signalCallbackHandler(int signum) {
 }
 
 int main() {
+    int socketId = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketId == -1) {
+        std::cerr << "Error creating server socket." << std::endl;
+        return 1;
+    }
+
+    // Define the server address and port
+    sockaddr_in serverAddress;
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(SERVER_PORT);
+    serverAddress.sin_addr.s_addr = INADDR_ANY;
+
+    // Bind the server socket to the address and port
+    if (bind(socketId, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
+        std::cerr << "Error binding server socket." << std::endl;
+        return 1;
+    }
+
+    // Listen for incoming connections
+    if (listen(socketId, SOMAXCONN) == -1) {
+        std::cerr << "Error listening for incoming connections." << std::endl;
+        return 1;
+    }
+
+    std::cout << "Server is listening for incoming connections..." << std::endl;
+
+    std::thread tConfig(readConfig);
+    tConfig.detach();
+
+    while (true) {
+        // Accept incoming connections
+        int clientSocket;
+        sockaddr_in clientAddress;
+        socklen_t clientAddressSize = sizeof(clientAddress);
+
+        clientSocket = accept(socketId, (struct sockaddr*)&clientAddress, &clientAddressSize);
+        if (clientSocket == -1) {
+            std::cerr << "Error accepting the connection." << std::endl;
+            return 1;
+        }
+
+        std::thread t1(handleClient, std::ref(clientSocket));
+        t1.detach();
+    }
+    close(socketId);
+}
+
+/*
+int main() {
     // handle ctrl+c signal
 
     // std::string ipAddress = getIpAddress();
@@ -94,7 +143,7 @@ int main() {
     vector<vector<Vertex>> meshPoints;
     vector<int> lineLength;
 
-    while(theta <= 360) {
+    while(theta < 360) {
         cv::Mat img;
         cv::Mat cropped;
         
@@ -354,3 +403,4 @@ int main() {
 
     return 0;
 }
+*/

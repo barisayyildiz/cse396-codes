@@ -369,6 +369,22 @@ CMakeFiles/test.dir/source/scanner.cpp.o: \
  /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
  /usr/include/c++/11/bits/fstream.tcc \
+ /usr/include/x86_64-linux-gnu/sys/socket.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+ /usr/include/x86_64-linux-gnu/bits/socket.h \
+ /usr/include/x86_64-linux-gnu/bits/socket_type.h \
+ /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
+ /usr/include/x86_64-linux-gnu/asm/socket.h \
+ /usr/include/asm-generic/socket.h /usr/include/linux/posix_types.h \
+ /usr/include/linux/stddef.h \
+ /usr/include/x86_64-linux-gnu/asm/posix_types.h \
+ /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
+ /usr/include/asm-generic/posix_types.h \
+ /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
+ /usr/include/asm-generic/bitsperlong.h \
+ /usr/include/x86_64-linux-gnu/asm/sockios.h \
+ /usr/include/asm-generic/sockios.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
  /home/barisayyildiz/cse396-codes/demoserver/source/../header/scanner.h \
  /usr/include/signal.h \
  /usr/include/x86_64-linux-gnu/bits/signum-generic.h \
@@ -392,4 +408,9 @@ CMakeFiles/test.dir/source/scanner.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
  /usr/include/x86_64-linux-gnu/bits/signal_ext.h \
- /usr/include/x86_64-linux-gnu/sys/wait.h
+ /usr/include/x86_64-linux-gnu/sys/wait.h /usr/include/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h \
+ /usr/include/linux/falloc.h /usr/include/x86_64-linux-gnu/bits/stat.h \
+ /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
+ /home/barisayyildiz/cse396-codes/demoserver/source/../header/communication_layer.h
