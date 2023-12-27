@@ -12,12 +12,15 @@
 #include "../header/scanner.h"
 #include "../header/communication_layer.h"
 
-int stepNumber = 0;
-int counter = 0;
+int currentStepNumber;
+int currentHorizontalPrecision;
+int currentVerticalPrecision;
+pthread_mutex_t currentScannerMutex = PTHREAD_MUTEX_INITIALIZER;
+
 pthread_mutex_t fileMutex = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t scannerStateMutex = PTHREAD_MUTEX_INITIALIZER;
-ScannerState scannerState = FINISHED;
+ScannerState scannerState = IDLE;
 
 int desktopSocket;
 int mobileSocket;
@@ -142,6 +145,29 @@ void writeConfigurationsFile(const char* fileName, Configuration& config) {
     pthread_mutex_unlock(&fileMutex);
 }
 
+void getScannerStateStr(char buffer[BUFFER_SIZE]) {
+    memset(buffer, '\0', BUFFER_SIZE);
+    pthread_mutex_lock(&scannerStateMutex); 
+    if(scannerState == IDLE) {
+        strcat(buffer, "scanner_state IDLE");
+    } else if(scannerState == RUNNING) {
+        strcat(buffer, "scanner_state RUNNING");
+    } else if(scannerState == CANCELLED) {
+        strcat(buffer, "scanner_state CANCELLED");
+    } else if(scannerState == FINISHED) {
+        strcat(buffer, "scanner_state FINISHED");
+    }
+    // Concatenate additional information
+    char tempBuffer[BUFFER_SIZE];
+    snprintf(tempBuffer, BUFFER_SIZE, " current_step %d", currentStepNumber);
+    strcat(buffer, tempBuffer);
+    snprintf(tempBuffer, BUFFER_SIZE, " current_horizontal_precision %d", currentHorizontalPrecision);
+    strcat(buffer, tempBuffer);
+    snprintf(tempBuffer, BUFFER_SIZE, " current_vertical_precision %d", currentVerticalPrecision);
+    strcat(buffer, tempBuffer);
+    pthread_mutex_unlock(&scannerStateMutex);
+}
+
 void mainScanner(int& clientSocket) {
     // handle ctrl+c signal
 
@@ -177,10 +203,14 @@ void mainScanner(int& clientSocket) {
     int counter = 0;
     int centerC = 185;
 
+    currentStepNumber = 0;
+
     std::vector<std::vector<Vertex>> meshPoints;
     std::vector<int> lineLength;
     Configuration config;
     readConfigurationsFile("configurations.txt", config);
+    currentHorizontalPrecision = config.horizontal_precision;
+    currentVerticalPrecision = config.vertical_precision;
 
     while(theta < 360) {
         // check if the scanning has been cancelled
@@ -364,6 +394,7 @@ void mainScanner(int& clientSocket) {
         theta = theta + static_cast<double>((360.0 / config.horizontal_precision));
         std::cout << "counter: " << counter << std::endl;
         counter++;
+        currentStepNumber = counter;
     }
 
     std::cout << "outside" << std::endl;

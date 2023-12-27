@@ -465,6 +465,7 @@ CMakeFiles/test.dir/source/communication_layer.cpp.o: source/communication_layer
   /usr/include/linux/falloc.h \
   /usr/include/x86_64-linux-gnu/bits/stat.h \
   /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
+  header/communication_layer.h \
   /usr/include/x86_64-linux-gnu/sys/socket.h \
   /usr/include/x86_64-linux-gnu/bits/socket.h \
   /usr/include/x86_64-linux-gnu/bits/socket_type.h \
@@ -971,6 +972,7 @@ CMakeFiles/test.dir/source/scanner.cpp.o: source/scanner.cpp \
   /usr/include/linux/falloc.h \
   /usr/include/x86_64-linux-gnu/bits/stat.h \
   /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
+  header/communication_layer.h \
   header/communication_layer.h
 
 CMakeFiles/test.dir/test.cpp.o: test.cpp \
@@ -1458,6 +1460,7 @@ CMakeFiles/test.dir/test.cpp.o: test.cpp \
   /usr/include/linux/falloc.h \
   /usr/include/x86_64-linux-gnu/bits/stat.h \
   /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
+  header/communication_layer.h \
   header/communication_layer.h
 
 

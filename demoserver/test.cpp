@@ -34,6 +34,17 @@ void signalCallbackHandler(int signum) {
 }
 
 int main() {
+    // initialize scanner state
+    Configuration config;
+    readConfigurationsFile("configurations.txt", config);
+    
+    pthread_mutex_lock(&currentScannerMutex);
+    currentStepNumber = 0;
+    currentHorizontalPrecision = config.horizontal_precision;
+    currentVerticalPrecision = config.vertical_precision;
+    scannerState = IDLE;
+    pthread_mutex_unlock(&currentScannerMutex);
+
     int serverSocketId = socket(AF_INET, SOCK_STREAM, 0);
     int configSocketId = socket(AF_INET, SOCK_STREAM, 0);
     int broadcastSocketId = socket(AF_INET, SOCK_STREAM, 0);
@@ -165,6 +176,12 @@ int main() {
         client.broadcastSocket = broadcastClientSocket;
         // client.scannerSocket = scannerClientSocket;
         clients.push_back(client);
+
+        // TODO: send scanner info to newly connected client
+        memset(buffer, '\0', BUFFER_SIZE);
+        getScannerStateStr(buffer);
+        send(serverClientSocket, buffer, BUFFER_SIZE, 0);
+        std::cout << buffer << std::endl;
 
         std::thread t2(handleClientConfigSocket, std::ref(client.serverSocket), std::ref(client.configSocket));
         t2.detach();
