@@ -170,12 +170,12 @@ void mainScanner(int& clientSocket) {
     char buffer[BUFFER_SIZE];
     bool isCancelled = false;
 
-    recv(clientSocket, buffer, BUFFER_SIZE, 0);
+    // recv(clientSocket, buffer, BUFFER_SIZE, 0);
 
     int i = 0;
     double theta = 0;
     int counter = 0;
-    int centerC = 220;
+    int centerC = 185;
 
     std::vector<std::vector<Vertex>> meshPoints;
     std::vector<int> lineLength;
@@ -186,16 +186,11 @@ void mainScanner(int& clientSocket) {
         // check if the scanning has been cancelled
         pthread_mutex_lock(&scannerStateMutex);
         if(scannerState == CANCELLED) {
-            memset(buffer, '\0', BUFFER_SIZE);
-            sprintf(buffer, "CANCEL");
-            send(clientSocket, buffer, BUFFER_SIZE, 0);
-            recv(clientSocket, buffer, BUFFER_SIZE, 0);
             isCancelled = true;
-        }
-        pthread_mutex_unlock(&scannerStateMutex);
-        if(isCancelled) {
+            pthread_mutex_unlock(&scannerStateMutex);
             break;
         }
+        pthread_mutex_unlock(&scannerStateMutex);
 
         cv::Mat img;
         cv::Mat cropped;
@@ -205,8 +200,8 @@ void mainScanner(int& clientSocket) {
         save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
         img = cv::imread(save_path);
 
-        // save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
-        // cv::imwrite(save_path, img);
+        save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
+        cv::imwrite(save_path, img);
         
         cv::Point2f pts[4];
         pts[0] = {config.top_left_x, config.top_left_y};
@@ -311,11 +306,13 @@ void mainScanner(int& clientSocket) {
         if(true) {            
             memset(buffer, '\0', BUFFER_SIZE);
             sprintf(buffer, "%d %d", counter+1, config.horizontal_precision);
+            std::cout << "buffer: " << buffer << std::endl;
             send(clientSocket, buffer, sizeof(buffer), 0);
 
             memset(buffer, '\0', BUFFER_SIZE);
             sprintf(buffer, "%d", (int)meshPoints.back().size());
             send(clientSocket, buffer, sizeof(buffer), 0);
+            std::cout << "buffer: " << buffer << std::endl;
             printf("size: %s\n", buffer);
             usleep(300000);
         }
@@ -358,6 +355,7 @@ void mainScanner(int& clientSocket) {
             chunkSize = 1024; // Choose an appropriate chunk size
             for (int i = 0; i <imgSize; i += chunkSize) {
                 int remaining = std::min(chunkSize, imgSize - i);
+                std::cout << "remaining: " << remaining << std::endl;
                 send(clientSocket, imageBuffer.data() + i, remaining, 0);
                 recv(clientSocket, buffer, BUFFER_SIZE, 0);
             }
@@ -368,10 +366,12 @@ void mainScanner(int& clientSocket) {
         counter++;
     }
 
+    std::cout << "outside" << std::endl;
+
     if(!isCancelled) {
         memset(buffer, '\0', BUFFER_SIZE);
-        sprintf(buffer, "%s", "FINISHED");
-        send(clientSocket, buffer, sizeof(buffer), 0);
+        // sprintf(buffer, "%s", "FINISHED");
+        // send(clientSocket, buffer, sizeof(buffer), 0);
 
         int shortest = meshPoints[distance(lineLength.begin(), max_element(lineLength.begin(), lineLength.end()))].size();
 
@@ -495,15 +495,18 @@ void mainScanner(int& clientSocket) {
             send(clientSocket, objContent.c_str() + i, remaining, 0);
             recv(clientSocket, buffer, BUFFER_SIZE, 0);
         }
+
+        pthread_mutex_lock(&scannerStateMutex);
+        scannerState = FINISHED;
+        pthread_mutex_unlock(&scannerStateMutex);
+
+        broadcastMessage("scanner_state FINISH");
+
+        std::cout << "scanning finished inside scanner successfully\n";
+
+    } else {
+        std::cout << "scanning has canncelled\n";
     }
-
-    pthread_mutex_lock(&scannerStateMutex);
-    scannerState = FINISHED;
-    pthread_mutex_unlock(&scannerStateMutex);
-
-    broadcastMessage("scanner_state FINISH");
-
-    std::cout << "scanning finished inside scanner\n";
 
     // cv::waitKey(0);
 }

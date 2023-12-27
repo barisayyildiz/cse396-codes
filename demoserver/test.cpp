@@ -37,7 +37,8 @@ int main() {
     int serverSocketId = socket(AF_INET, SOCK_STREAM, 0);
     int configSocketId = socket(AF_INET, SOCK_STREAM, 0);
     int broadcastSocketId = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocketId == -1 || configSocketId == -1 || broadcastSocketId == -1) {
+    int scannerSocketId = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocketId == -1 || configSocketId == -1 || broadcastSocketId == -1 || scannerSocketId == -1) {
         std::cerr << "Error creating server socket." << std::endl;
         return 1;
     }
@@ -58,6 +59,11 @@ int main() {
     broadcastAddress.sin_port = htons(BROADCAST_PORT);
     broadcastAddress.sin_addr.s_addr = INADDR_ANY;
 
+    // sockaddr_in scannerAddress;
+    // scannerAddress.sin_family = AF_INET;
+    // scannerAddress.sin_port = htons(SCANNER_PORT);
+    // scannerAddress.sin_addr.s_addr = INADDR_ANY;
+
     // Bind the server socket to the address and port
     if (bind(serverSocketId, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
         std::cerr << "Error binding server socket." << std::endl;
@@ -71,6 +77,10 @@ int main() {
         std::cerr << "Error binding broadcast socket." << std::endl;
         return 1;
     }
+    // if (bind(scannerSocketId, (struct sockaddr*)&scannerAddress, sizeof(scannerAddress)) == -1) {
+    //     std::cerr << "Error binding scanner socket." << std::endl;
+    //     return 1;
+    // }
 
     // Listen for incoming connections
     if (listen(serverSocketId, SOMAXCONN) == -1) {
@@ -85,6 +95,10 @@ int main() {
         std::cerr << "Error listening for incoming connections." << std::endl;
         return 1;
     }
+    // if (listen(scannerSocketId, SOMAXCONN) == -1) {
+    //     std::cerr << "Error listening for incoming connections." << std::endl;
+    //     return 1;
+    // }
 
     char buffer[BUFFER_SIZE];
 
@@ -109,6 +123,10 @@ int main() {
         sockaddr_in broadcastClientAddress;
         socklen_t broadcastClientAddressSize = sizeof(broadcastClientAddress);
 
+        // int scannerClientSocket;
+        // sockaddr_in scannerClientAddress;
+        // socklen_t scannerClientAddressSize = sizeof(scannerClientAddress);
+
         serverClientSocket = accept(serverSocketId, (struct sockaddr*)&serverClientAddress, &serverClientAddressSize);
         if (serverClientSocket == -1) {
             std::cerr << "Error accepting the connection." << std::endl;
@@ -127,6 +145,12 @@ int main() {
             return 1;
         }
 
+        // scannerClientSocket = accept(broadcastSocketId, (struct sockaddr*)&scannerClientAddress, &scannerClientAddressSize);
+        // if (scannerClientSocket == -1) {
+        //     std::cerr << "Error accepting the connection." << std::endl;
+        //     return 1;
+        // }
+
         memset(buffer, '\0', BUFFER_SIZE);
         recv(serverClientSocket, buffer, BUFFER_SIZE, 0);
         if(strcmp(buffer, "desktop") == 0) {
@@ -139,6 +163,7 @@ int main() {
         client.serverSocket = serverClientSocket;
         client.configSocket = configClientSocket;
         client.broadcastSocket = broadcastClientSocket;
+        // client.scannerSocket = scannerClientSocket;
         clients.push_back(client);
 
         std::thread t2(handleClientConfigSocket, std::ref(client.serverSocket), std::ref(client.configSocket));
