@@ -19,6 +19,10 @@ pthread_mutex_t fileMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t scannerStateMutex = PTHREAD_MUTEX_INITIALIZER;
 ScannerState scannerState = FINISHED;
 
+int desktopSocket;
+int mobileSocket;
+int clientCounter = 0;
+
 using namespace cv;
 using namespace std;
 
@@ -160,13 +164,13 @@ void mainScanner(int& clientSocket) {
     // imshow("Raspberry Pi IP Address", windowImage);
     // cv::waitKey(0);
 
-    pthread_mutex_lock(&scannerStateMutex);
-    scannerState = RUNNING;
-    pthread_mutex_unlock(&scannerStateMutex);
-
+    std::cout << "main scanner...." << std::endl;
+    
     srand(time(0));
     char buffer[BUFFER_SIZE];
     bool isCancelled = false;
+
+    recv(clientSocket, buffer, BUFFER_SIZE, 0);
 
     int i = 0;
     double theta = 0;
@@ -181,7 +185,7 @@ void mainScanner(int& clientSocket) {
     while(theta < 360) {
         // check if the scanning has been cancelled
         pthread_mutex_lock(&scannerStateMutex);
-        if(scannerState == FINISHED) {
+        if(scannerState == CANCELLED) {
             memset(buffer, '\0', BUFFER_SIZE);
             sprintf(buffer, "CANCEL");
             send(clientSocket, buffer, BUFFER_SIZE, 0);
@@ -201,8 +205,8 @@ void mainScanner(int& clientSocket) {
         save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
         img = cv::imread(save_path);
 
-        save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
-        cv::imwrite(save_path, img);
+        // save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
+        // cv::imwrite(save_path, img);
         
         cv::Point2f pts[4];
         pts[0] = {config.top_left_x, config.top_left_y};
@@ -346,6 +350,7 @@ void mainScanner(int& clientSocket) {
             // send image size
             imageBuffer;
             imencode(".jpg", backG*255, imageBuffer);
+            std::cout << "imageBuffer size: " << imageBuffer.size() << std::endl;
             imgSize = imageBuffer.size();
             send(clientSocket, &imgSize, sizeof(int), 0);
             
@@ -495,6 +500,8 @@ void mainScanner(int& clientSocket) {
     pthread_mutex_lock(&scannerStateMutex);
     scannerState = FINISHED;
     pthread_mutex_unlock(&scannerStateMutex);
+
+    broadcastMessage("scanner_state FINISH");
 
     std::cout << "scanning finished inside scanner\n";
 

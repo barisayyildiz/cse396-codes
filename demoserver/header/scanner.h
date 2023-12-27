@@ -26,13 +26,18 @@
 
 enum ScannerState {
     RUNNING,
-    FINISHED
+    FINISHED,
+    CANCELLED,
+    IDLE
 };
 
 extern int stepNumber;
 extern int counter;
 extern pthread_mutex_t scannerStateMutex;
 extern ScannerState scannerState;
+extern int desktopSocket;
+extern int mobileSocket;
+extern int clientCounter;
 
 struct Configuration {
     int horizontal_precision, vertical_precision;

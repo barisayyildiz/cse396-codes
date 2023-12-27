@@ -1,6 +1,7 @@
 horizontal_precision 256
-vertical_precision 100
-top_left 333.000000 225.000000
-top_right 607.000000 216.000000
-bottom_right 623.000000 764.000000
-bottom_left 337.000000 760.000000
+vertical_precision 24
+top_left 396.000000 143.000000
+top_right 534.000000 141.000000
+bottom_right 521.000000 647.000000
+bottom_left 377.000000 649.000000
+

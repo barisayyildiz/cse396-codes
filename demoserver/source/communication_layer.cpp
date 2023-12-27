@@ -11,6 +11,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <fcntl.h>
+#include <future>
 
 // for random number generation
 #include <cstdlib>  
@@ -18,124 +19,109 @@
 
 int dataSocket;
 int configSocket;
+std::vector<ClientNode> clients;
 
-// reads all kinds of messages
-/*
-    COMMAND CANCEL
-    precision 256 100
-    four_points 0.0 0.0 100.0 0.0 100.0 100.0 0.0 100.0
-*/
-int readConfig() {
-    int socketId = socket(AF_INET, SOCK_STREAM, 0);
-    if (socketId == -1) {
-        std::cerr << "Error creating server socket." << std::endl;
-        return 1;
-    }
-
-    // Define the server address and port
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(CONFIG_PORT);
-    serverAddress.sin_addr.s_addr = INADDR_ANY;
-
-    // Bind the server socket to the address and port
-    if (bind(socketId, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
-        std::cerr << "Error binding readConfig socket." << std::endl;
-        return 1;
-    }
-
-    // Listen for incoming connections
-    if (listen(socketId, SOMAXCONN) == -1) {
-        std::cerr << "Error listening for incoming connections." << std::endl;
-        return 1;
-    }
-
+void handleClientConfigSocket(int serverSocket, int configSocket) {
     char buffer[BUFFER_SIZE];
-
-    std::cout << "Server is listening for configuration updates..." << std::endl;
-
-    int clientSocket;
-    sockaddr_in clientAddress;
-    socklen_t clientAddressSize = sizeof(clientAddress);
-
     Configuration config;
 
-    while(true) {
-        clientSocket = accept(socketId, (struct sockaddr*)&clientAddress, &clientAddressSize);
-        if (clientSocket == -1) {
-            std::cerr << "Error accepting the connection." << std::endl;
-            return 1;
+    while (true) {
+        memset(buffer, '\0', BUFFER_SIZE);
+        int bytesRead = recv(configSocket, buffer, BUFFER_SIZE, 0);
+        if (bytesRead == 0) {
+            // Client disconnected
+            break;
+        } else if (bytesRead == -1) {
+            // Handle error
+            std::cerr << "Error receiving data from client." << std::endl;
+            close(configSocket);
+            break;
         }
 
-        while(true) {
-            memset(buffer, '\0', BUFFER_SIZE);
-            int bytesRead = recv(clientSocket, buffer, BUFFER_SIZE, 0);
-            if(bytesRead == 0) {
-                break;
-            }
-            if(bytesRead == -1) {
-                close(clientSocket);
-                break;
-            }
-            std::cout << buffer << std::endl;
-            readConfigurationsFile("configurations.txt", config);
+        std::cout << buffer << std::endl;
+        readConfigurationsFile("configurations.txt", config);
 
-            char* token = strtok(buffer, " ");
-            if(strcmp(token, "precision") == 0) {
-                // precision 256 100
-                token = strtok(NULL, " ");
-                config.horizontal_precision = atoi(token);
-                token = strtok(NULL, " ");
-                config.vertical_precision = atoi(token);
-            } else if(strcmp(token, "four_points") == 0) {
-                // four_points 0.0 0.0 100.0 0.0 100.0 100.0 0.0 100.0
-                token = strtok(NULL, " ");
-                config.top_left_x = atof(token);
-                token = strtok(NULL, " ");
-                config.top_left_y = atof(token);
-                token = strtok(NULL, " ");
-                config.top_right_x = atof(token);
-                token = strtok(NULL, " ");
-                config.top_right_y = atof(token);
-                token = strtok(NULL, " ");
-                config.bottom_right_x = atof(token);
-                token = strtok(NULL, " ");
-                config.bottom_right_y = atof(token);
-                token = strtok(NULL, " ");
-                config.bottom_left_x = atof(token);
-                token = strtok(NULL, " ");
-                config.bottom_left_y = atof(token);
-            } else if(strcmp(token, "command") == 0) {
-                token = strtok(NULL, " ");
-                if(strcmp(token, "cancel") == 0) {
-                    pthread_mutex_lock(&scannerStateMutex);
-                    scannerState = FINISHED;
-                    pthread_mutex_unlock(&scannerStateMutex);
-                }
-            }
+        char* token = strtok(buffer, " ");
+        if(strcmp(token, "precision") == 0) {
+            // precision 256 100
+            token = strtok(NULL, " ");
+            config.horizontal_precision = atoi(token);
+            token = strtok(NULL, " ");
+            config.vertical_precision = atoi(token);
+        } else if(strcmp(token, "four_points") == 0) {
+            // four_points 0.0 0.0 100.0 0.0 100.0 100.0 0.0 100.0
+            token = strtok(NULL, " ");
+            config.top_left_x = atof(token);
+            token = strtok(NULL, " ");
+            config.top_left_y = atof(token);
+            token = strtok(NULL, " ");
+            config.top_right_x = atof(token);
+            token = strtok(NULL, " ");
+            config.top_right_y = atof(token);
+            token = strtok(NULL, " ");
+            config.bottom_right_x = atof(token);
+            token = strtok(NULL, " ");
+            config.bottom_right_y = atof(token);
+            token = strtok(NULL, " ");
+            config.bottom_left_x = atof(token);
+            token = strtok(NULL, " ");
+            config.bottom_left_y = atof(token);
+        } else if(strcmp(token, "command") == 0) {
+            token = strtok(NULL, " ");
+            if(strcmp(token, "cancel") == 0) {
+                pthread_mutex_lock(&scannerStateMutex);
+                scannerState = CANCELLED;
+                pthread_mutex_unlock(&scannerStateMutex);
+                broadcastMessage("scanner_state CANCELLED");
+            } else if(strcmp(token, "start") == 0) {
+                pthread_mutex_lock(&scannerStateMutex);
+                scannerState = RUNNING;
+                pthread_mutex_unlock(&scannerStateMutex);
+                broadcastMessage("scanner_state RUNNING");
 
-            writeConfigurationsFile("configurations.txt", config);
+                std::thread tScanner(mainScanner, std::ref(serverSocket));
+                tScanner.detach();
+            }
         }
+
+        writeConfigurationsFile("configurations.txt", config);
     }
-    
-    close(socketId);
 }
 
-void handleClient(int& clientSocket) {
+
+// TODO: clientlara mesaj broadcast edecek bir fonksiyon
+void broadcastMessage(const char* message) {
+    char buffer[BUFFER_SIZE];
+    for(int i=0; i<clients.size(); i++) {
+        memset(buffer, '\0', BUFFER_SIZE);
+        sprintf(buffer, "%s", message);
+        std::cout << "broadcastmessage: " << buffer << std::endl;
+        send(clients.at(i).broadcastSocket, buffer, BUFFER_SIZE, 0);
+    }
+}
+
+
+void handleClient(int& serverSocket) {
     char buffer[BUFFER_SIZE];
 
     while(1) {
         // scanner is at idle state
-        std::cout << "inside main loop\n";
+        // std::cout << "inside main loop\n";
 
-        // waiting for START command
-        memset(buffer, '\0', BUFFER_SIZE);
-        recv(clientSocket, buffer, BUFFER_SIZE, 0);
+        bool scannerActive = false;
+        pthread_mutex_lock(&scannerStateMutex);
+        if(scannerState == RUNNING) {
+            scannerActive = true;
+        }
+        pthread_mutex_unlock(&scannerStateMutex);
 
-        std::cout << "buffer: " << buffer << std::endl;
+        if(!scannerActive) {
+            usleep(1000);
+            continue;
+        }
 
         while(1) {
-            std::thread tScanner(mainScanner, std::ref(clientSocket));
+            std::thread tScanner(mainScanner, std::ref(serverSocket));
             tScanner.join();
             break;
         }
