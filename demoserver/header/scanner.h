@@ -16,6 +16,8 @@
 #include <pthread.h>
 #include <fcntl.h>
 
+#include "communication_layer.h"
+
 #define STEPPER_PIN_1 1
 #define STEPPER_PIN_2 7
 #define STEPPER_PIN_3 8
@@ -31,10 +33,12 @@ enum ScannerState {
     IDLE
 };
 
-extern int stepNumber;
-extern int counter;
-extern pthread_mutex_t scannerStateMutex;
+extern int currentStepNumber;
+extern int currentHorizontalPrecision;
+extern int currentVerticalPrecision;
+extern pthread_mutex_t currentScannerMutex;
 extern ScannerState scannerState;
+extern pthread_mutex_t scannerStateMutex;
 extern int desktopSocket;
 extern int mobileSocket;
 extern int clientCounter;
@@ -79,5 +83,7 @@ Vertex getVertex(Vertex pCoord);
 void readConfigurationsFile(const char* fileName, Configuration& config);
 void writeConfigurationsFile(const char* fileName, Configuration& config);
 void mainScanner(int& clientSocket);
+
+void getScannerStateStr(char buffer[BUFFER_SIZE]);
 
 #endif
