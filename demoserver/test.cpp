@@ -53,7 +53,8 @@ int main() {
     int configSocketId = socket(AF_INET, SOCK_STREAM, 0);
     int broadcastSocketId = socket(AF_INET, SOCK_STREAM, 0);
     int scannerSocketId = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocketId == -1 || configSocketId == -1 || broadcastSocketId == -1 || scannerSocketId == -1) {
+    int calibrationImageId = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocketId == -1 || configSocketId == -1 || broadcastSocketId == -1 || scannerSocketId == -1 || calibrationImageId == -1) {
         std::cerr << "Error creating server socket." << std::endl;
         return 1;
     }
@@ -74,6 +75,12 @@ int main() {
     broadcastAddress.sin_port = htons(BROADCAST_PORT);
     broadcastAddress.sin_addr.s_addr = INADDR_ANY;
 
+    sockaddr_in calibrationImagecastAddress;
+    calibrationImagecastAddress.sin_family = AF_INET;
+    calibrationImagecastAddress.sin_port = htons(IMAGE_PORT);
+    calibrationImagecastAddress.sin_addr.s_addr = INADDR_ANY;
+
+
     // sockaddr_in scannerAddress;
     // scannerAddress.sin_family = AF_INET;
     // scannerAddress.sin_port = htons(SCANNER_PORT);
@@ -92,6 +99,10 @@ int main() {
         std::cerr << "Error binding broadcast socket." << std::endl;
         return 1;
     }
+    if (bind(calibrationImageId, (struct sockaddr*)&calibrationImagecastAddress, sizeof(calibrationImagecastAddress)) == -1) {
+        std::cerr << "Error binding broadcast socket." << std::endl;
+        return 1;
+    }
     // if (bind(scannerSocketId, (struct sockaddr*)&scannerAddress, sizeof(scannerAddress)) == -1) {
     //     std::cerr << "Error binding scanner socket." << std::endl;
     //     return 1;
@@ -107,6 +118,10 @@ int main() {
         return 1;
     }
     if (listen(broadcastSocketId, SOMAXCONN) == -1) {
+        std::cerr << "Error listening for incoming connections." << std::endl;
+        return 1;
+    }
+    if (listen(calibrationImageId, SOMAXCONN) == -1) {
         std::cerr << "Error listening for incoming connections." << std::endl;
         return 1;
     }
@@ -138,6 +153,10 @@ int main() {
         sockaddr_in broadcastClientAddress;
         socklen_t broadcastClientAddressSize = sizeof(broadcastClientAddress);
 
+        int calibrationImageClientSocket;
+        sockaddr_in calibrationImageClientAddress;
+        socklen_t calibrationImageClientAddressSize = sizeof(calibrationImageClientAddress);
+
         // int scannerClientSocket;
         // sockaddr_in scannerClientAddress;
         // socklen_t scannerClientAddressSize = sizeof(scannerClientAddress);
@@ -160,6 +179,12 @@ int main() {
             return 1;
         }
 
+        calibrationImageClientSocket = accept(calibrationImageId, (struct sockaddr*)&calibrationImageClientAddress, &calibrationImageClientAddressSize);
+        if (calibrationImageClientSocket == -1) {
+            std::cerr << "Error accepting the connection." << std::endl;
+            return 1;
+        }
+
         // scannerClientSocket = accept(broadcastSocketId, (struct sockaddr*)&scannerClientAddress, &scannerClientAddressSize);
         // if (scannerClientSocket == -1) {
         //     std::cerr << "Error accepting the connection." << std::endl;
@@ -178,6 +203,7 @@ int main() {
         client.serverSocket = serverClientSocket;
         client.configSocket = configClientSocket;
         client.broadcastSocket = broadcastClientSocket;
+        client.calibrationImageSocket = calibrationImageClientSocket;
         // client.scannerSocket = scannerClientSocket;
         clients.push_back(client);
 
@@ -187,7 +213,7 @@ int main() {
         send(serverClientSocket, buffer, BUFFER_SIZE, 0);
         std::cout << buffer << std::endl;
 
-        std::thread t2(handleClientConfigSocket, std::ref(client.serverSocket), std::ref(client.configSocket));
+        std::thread t2(handleClientConfigSocket, std::ref(client.serverSocket), std::ref(client.configSocket), std::ref(calibrationImageClientSocket));
         t2.detach();
     }
     

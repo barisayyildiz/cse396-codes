@@ -166,6 +166,26 @@ void getScannerStateStr(char buffer[BUFFER_SIZE]) {
     pthread_mutex_unlock(&scannerStateMutex);
 }
 
+void sendImageForCalibration(int calibrationImageSocket) {
+    char buffer[BUFFER_SIZE];
+    
+    std::string save_path = "imgs_db/original/0.jpg";
+    cv::Mat img = cv::imread(save_path);
+    std::vector<uchar> imageBuffer;
+    imencode(".jpg", img, imageBuffer);
+    int imgSize = imageBuffer.size();
+    
+    send(calibrationImageSocket, &imgSize, sizeof(int), 0);
+    
+    // send image
+    int chunkSize = 1024; // Choose an appropriate chunk size
+    for (int i = 0; i <imgSize; i += chunkSize) {
+        int remaining = std::min(chunkSize, imgSize - i);
+        send(calibrationImageSocket, imageBuffer.data() + i, remaining, 0);
+        recv(calibrationImageSocket, buffer, BUFFER_SIZE, 0);
+    }
+}
+
 void mainScanner(int& clientSocket) {
     // handle ctrl+c signal
 

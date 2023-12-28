@@ -21,7 +21,7 @@ int dataSocket;
 int configSocket;
 std::vector<ClientNode> clients;
 
-void handleClientConfigSocket(int serverSocket, int configSocket) {
+void handleClientConfigSocket(int serverSocket, int configSocket, int calibrationImageSocket) {
     char buffer[BUFFER_SIZE];
     char tmpBuffer[BUFFER_SIZE];
     Configuration config;
@@ -78,6 +78,8 @@ void handleClientConfigSocket(int serverSocket, int configSocket) {
 
                 std::thread tScanner(mainScanner, std::ref(serverSocket));
                 tScanner.detach();
+            } else if(strcmp(token, "calibration_image") == 0) {
+                sendImageForCalibration(calibrationImageSocket);
             }
         }
 

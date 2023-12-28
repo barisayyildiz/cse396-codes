@@ -89,5 +89,6 @@ void writeConfigurationsFile(const char* fileName, Configuration& config);
 void mainScanner(int& clientSocket);
 
 void getScannerStateStr(char buffer[BUFFER_SIZE]);
+void sendImageForCalibration(int calibrationImageSocket);
 
 #endif

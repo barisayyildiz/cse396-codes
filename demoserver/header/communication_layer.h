@@ -4,7 +4,8 @@
 #define SERVER_PORT 3000
 #define CONFIG_PORT 3001
 #define BROADCAST_PORT 3002
-#define SCANNER_PORT 3003
+#define IMAGE_PORT 3003
+// #define SCANNER_PORT 3004
 
 #define BUFFER_SIZE 1024
 
@@ -25,6 +26,7 @@ typedef struct ClientNode{
     int configSocket;
     int broadcastSocket;
     int scannerSocket;
+    int calibrationImageSocket;
 } ClientNode;
 
 extern std::vector<ClientNode> clients;
@@ -34,7 +36,7 @@ std::string getIpAddress();
 void handleClient(int& clientSocket);
 void broadcastMessage(const char* message);
 
-void handleClientConfigSocket(int serverSocket, int configSocket);
+void handleClientConfigSocket(int serverSocket, int configSocket, int calibrationImageSocket);
 void readFromAllClients();
 
 #endif
