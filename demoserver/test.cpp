@@ -43,6 +43,10 @@ int main() {
     currentHorizontalPrecision = config.horizontal_precision;
     currentVerticalPrecision = config.vertical_precision;
     scannerState = IDLE;
+    currentTopLeftX = config.top_left_x;
+    currentTopLeftY = config.top_left_y;
+    currentBottomRightX = config.bottom_right_x;
+    currentBottomRightY = config.bottom_right_y;
     pthread_mutex_unlock(&currentScannerMutex);
 
     int serverSocketId = socket(AF_INET, SOCK_STREAM, 0);

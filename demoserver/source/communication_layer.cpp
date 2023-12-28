@@ -23,6 +23,7 @@ std::vector<ClientNode> clients;
 
 void handleClientConfigSocket(int serverSocket, int configSocket) {
     char buffer[BUFFER_SIZE];
+    char tmpBuffer[BUFFER_SIZE];
     Configuration config;
 
     while (true) {
@@ -41,6 +42,9 @@ void handleClientConfigSocket(int serverSocket, int configSocket) {
         std::cout << buffer << std::endl;
         readConfigurationsFile("configurations.txt", config);
 
+        memset(tmpBuffer, '\0', BUFFER_SIZE);
+        strcpy(tmpBuffer, buffer);
+
         char* token = strtok(buffer, " ");
         if(strcmp(token, "precision") == 0) {
             // precision 256 100
@@ -49,23 +53,16 @@ void handleClientConfigSocket(int serverSocket, int configSocket) {
             token = strtok(NULL, " ");
             config.vertical_precision = atoi(token);
         } else if(strcmp(token, "four_points") == 0) {
-            // four_points 0.0 0.0 100.0 0.0 100.0 100.0 0.0 100.0
+            // four_points 0.0 0.0 100.0 100.0
             token = strtok(NULL, " ");
             config.top_left_x = atof(token);
             token = strtok(NULL, " ");
             config.top_left_y = atof(token);
             token = strtok(NULL, " ");
-            config.top_right_x = atof(token);
-            token = strtok(NULL, " ");
-            config.top_right_y = atof(token);
-            token = strtok(NULL, " ");
             config.bottom_right_x = atof(token);
             token = strtok(NULL, " ");
             config.bottom_right_y = atof(token);
-            token = strtok(NULL, " ");
-            config.bottom_left_x = atof(token);
-            token = strtok(NULL, " ");
-            config.bottom_left_y = atof(token);
+            broadcastMessage(tmpBuffer);
         } else if(strcmp(token, "command") == 0) {
             token = strtok(NULL, " ");
             if(strcmp(token, "cancel") == 0) {

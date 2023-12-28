@@ -15,6 +15,10 @@
 int currentStepNumber;
 int currentHorizontalPrecision;
 int currentVerticalPrecision;
+float currentTopLeftX;
+float currentTopLeftY;
+float currentBottomRightX;
+float currentBottomRightY;
 pthread_mutex_t currentScannerMutex = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t fileMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -79,12 +83,8 @@ void setConfigValues(const char* key, const char* value, Configuration& config) 
         sscanf(value, "%d", &config.vertical_precision);
     } else if (strcmp(key, "top_left") == 0) {
         sscanf(value, "%f %f", &config.top_left_x, &config.top_left_y);
-    } else if (strcmp(key, "top_right") == 0) {
-        sscanf(value, "%f %f", &config.top_right_x, &config.top_right_y);
     } else if (strcmp(key, "bottom_right") == 0) {
         sscanf(value, "%f %f", &config.bottom_right_x, &config.bottom_right_y);
-    } else if (strcmp(key, "bottom_left") == 0) {
-        sscanf(value, "%f %f", &config.bottom_left_x, &config.bottom_left_y);
     }
 }
 
@@ -128,15 +128,11 @@ void writeConfigurationsFile(const char* fileName, Configuration& config) {
              "horizontal_precision %d\n"
              "vertical_precision %d\n"
              "top_left %f %f\n"
-             "top_right %f %f\n"
-             "bottom_right %f %f\n"
-             "bottom_left %f %f\n",
+             "bottom_right %f %f\n",
              config.horizontal_precision,
              config.vertical_precision,
              config.top_left_x, config.top_left_y,
-             config.top_right_x, config.top_right_y,
-             config.bottom_right_x, config.bottom_right_y,
-             config.bottom_left_x, config.bottom_left_y);
+             config.bottom_right_x, config.bottom_right_y);
 
     // Write the buffer to the file
     write(fd, buffer, strlen(buffer));
@@ -164,6 +160,8 @@ void getScannerStateStr(char buffer[BUFFER_SIZE]) {
     snprintf(tempBuffer, BUFFER_SIZE, " current_horizontal_precision %d", currentHorizontalPrecision);
     strcat(buffer, tempBuffer);
     snprintf(tempBuffer, BUFFER_SIZE, " current_vertical_precision %d", currentVerticalPrecision);
+    strcat(buffer, tempBuffer);
+    snprintf(tempBuffer, BUFFER_SIZE, " four_points %f %f %f %f", currentTopLeftX, currentTopLeftY, currentBottomRightX, currentBottomRightY);
     strcat(buffer, tempBuffer);
     pthread_mutex_unlock(&scannerStateMutex);
 }
@@ -211,6 +209,10 @@ void mainScanner(int& clientSocket) {
     readConfigurationsFile("configurations.txt", config);
     currentHorizontalPrecision = config.horizontal_precision;
     currentVerticalPrecision = config.vertical_precision;
+    currentTopLeftX = config.top_left_x;
+    currentTopLeftY = config.top_left_y;
+    currentBottomRightX = config.bottom_right_x;
+    currentBottomRightY = config.bottom_right_y;
 
     while(theta < 360) {
         // check if the scanning has been cancelled
@@ -235,9 +237,9 @@ void mainScanner(int& clientSocket) {
         
         cv::Point2f pts[4];
         pts[0] = {config.top_left_x, config.top_left_y};
-        pts[1] = {config.top_right_x, config.top_right_y};
+        pts[1] = {config.bottom_right_x, config.top_left_y};
         pts[2] = {config.bottom_right_x, config.bottom_right_y};
-        pts[3] = {config.bottom_left_x, config.bottom_left_y};
+        pts[3] = {config.top_left_x, config.bottom_right_y};
         std::cout << pts[0];
         // pts[0] = { 340.0, 244.0 };
         // pts[1] = { 611.0, 244.0 };

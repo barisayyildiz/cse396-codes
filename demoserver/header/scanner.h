@@ -33,10 +33,16 @@ enum ScannerState {
     IDLE
 };
 
+// current scan values
 extern int currentStepNumber;
 extern int currentHorizontalPrecision;
 extern int currentVerticalPrecision;
+extern float currentTopLeftX;
+extern float currentTopLeftY;
+extern float currentBottomRightX;
+extern float currentBottomRightY;
 extern pthread_mutex_t currentScannerMutex;
+
 extern ScannerState scannerState;
 extern pthread_mutex_t scannerStateMutex;
 extern int desktopSocket;
@@ -46,9 +52,7 @@ extern int clientCounter;
 struct Configuration {
     int horizontal_precision, vertical_precision;
     float top_left_x, top_left_y;
-    float top_right_x, top_right_y;
     float bottom_right_x, bottom_right_y;
-    float bottom_left_x, bottom_left_y;
 };
 
 class Vertex {
