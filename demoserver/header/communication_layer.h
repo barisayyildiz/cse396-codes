@@ -5,6 +5,7 @@
 #define CONFIG_PORT 3001
 #define BROADCAST_PORT 3002
 #define IMAGE_PORT 3003
+#define LIVE_PORT 3004
 // #define SCANNER_PORT 3004
 
 #define BUFFER_SIZE 1024
@@ -27,7 +28,15 @@ typedef struct ClientNode{
     int broadcastSocket;
     int scannerSocket;
     int calibrationImageSocket;
+    int liveSocket;
 } ClientNode;
+
+extern int serverSocketId;
+extern int configSocketId;
+extern int broadcastSocketId;
+extern int scannerSocketId;
+extern int calibrationImageId;
+extern int liveSocketId;
 
 extern std::vector<ClientNode> clients;
 

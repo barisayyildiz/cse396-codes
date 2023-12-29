@@ -28,12 +28,26 @@ bool FEATURE_COMMUNICATION = false;
 
 void signalCallbackHandler(int signum) {
     std::cout << "Caught signal " << signum << std::endl;
-    close(dataSocket);
-    close(configSocket);
-    exit(signum);
+    for(int i=0; i<clients.size(); i++) {
+        close(clients.at(i).serverSocket);
+        close(clients.at(i).configSocket);
+        close(clients.at(i).broadcastSocket);
+        close(clients.at(i).scannerSocket);
+        close(clients.at(i).calibrationImageSocket);
+        close(clients.at(i).liveSocket);
+    }
+    close(serverSocketId);
+    close(configSocketId);
+    close(broadcastSocketId);
+    close(scannerSocketId);
+    close(calibrationImageId);
+    close(liveSocketId);
 }
 
 int main() {
+    // signal(SIGTERM, signalCallbackHandler);
+    // signal(SIGINT, signalCallbackHandler);
+
     // initialize scanner state
     Configuration config;
     readConfigurationsFile("configurations.txt", config);
@@ -54,7 +68,8 @@ int main() {
     int broadcastSocketId = socket(AF_INET, SOCK_STREAM, 0);
     int scannerSocketId = socket(AF_INET, SOCK_STREAM, 0);
     int calibrationImageId = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocketId == -1 || configSocketId == -1 || broadcastSocketId == -1 || scannerSocketId == -1 || calibrationImageId == -1) {
+    int liveSocketId = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocketId == -1 || configSocketId == -1 || broadcastSocketId == -1 || scannerSocketId == -1 || calibrationImageId == -1 || liveSocketId == -1) {
         std::cerr << "Error creating server socket." << std::endl;
         return 1;
     }
@@ -75,10 +90,15 @@ int main() {
     broadcastAddress.sin_port = htons(BROADCAST_PORT);
     broadcastAddress.sin_addr.s_addr = INADDR_ANY;
 
-    sockaddr_in calibrationImagecastAddress;
-    calibrationImagecastAddress.sin_family = AF_INET;
-    calibrationImagecastAddress.sin_port = htons(IMAGE_PORT);
-    calibrationImagecastAddress.sin_addr.s_addr = INADDR_ANY;
+    sockaddr_in calibrationImageAddress;
+    calibrationImageAddress.sin_family = AF_INET;
+    calibrationImageAddress.sin_port = htons(IMAGE_PORT);
+    calibrationImageAddress.sin_addr.s_addr = INADDR_ANY;
+
+    sockaddr_in liveAddress;
+    liveAddress.sin_family = AF_INET;
+    liveAddress.sin_port = htons(LIVE_PORT);
+    liveAddress.sin_addr.s_addr = INADDR_ANY;
 
 
     // sockaddr_in scannerAddress;
@@ -99,14 +119,14 @@ int main() {
         std::cerr << "Error binding broadcast socket." << std::endl;
         return 1;
     }
-    if (bind(calibrationImageId, (struct sockaddr*)&calibrationImagecastAddress, sizeof(calibrationImagecastAddress)) == -1) {
-        std::cerr << "Error binding broadcast socket." << std::endl;
+    if (bind(calibrationImageId, (struct sockaddr*)&calibrationImageAddress, sizeof(calibrationImageAddress)) == -1) {
+        std::cerr << "Error binding calibration image socket." << std::endl;
         return 1;
     }
-    // if (bind(scannerSocketId, (struct sockaddr*)&scannerAddress, sizeof(scannerAddress)) == -1) {
-    //     std::cerr << "Error binding scanner socket." << std::endl;
-    //     return 1;
-    // }
+    if (bind(liveSocketId, (struct sockaddr*)&liveAddress, sizeof(liveAddress)) == -1) {
+        std::cerr << "Error binding live socket." << std::endl;
+        return 1;
+    }
 
     // Listen for incoming connections
     if (listen(serverSocketId, SOMAXCONN) == -1) {
@@ -125,10 +145,10 @@ int main() {
         std::cerr << "Error listening for incoming connections." << std::endl;
         return 1;
     }
-    // if (listen(scannerSocketId, SOMAXCONN) == -1) {
-    //     std::cerr << "Error listening for incoming connections." << std::endl;
-    //     return 1;
-    // }
+    if (listen(liveSocketId, SOMAXCONN) == -1) {
+        std::cerr << "Error listening for incoming connections." << std::endl;
+        return 1;
+    }
 
     char buffer[BUFFER_SIZE];
 
@@ -157,9 +177,9 @@ int main() {
         sockaddr_in calibrationImageClientAddress;
         socklen_t calibrationImageClientAddressSize = sizeof(calibrationImageClientAddress);
 
-        // int scannerClientSocket;
-        // sockaddr_in scannerClientAddress;
-        // socklen_t scannerClientAddressSize = sizeof(scannerClientAddress);
+        int liveClientSocket;
+        sockaddr_in liveClientAddress;
+        socklen_t liveClientAddressSize = sizeof(liveClientAddress);
 
         serverClientSocket = accept(serverSocketId, (struct sockaddr*)&serverClientAddress, &serverClientAddressSize);
         if (serverClientSocket == -1) {
@@ -185,18 +205,20 @@ int main() {
             return 1;
         }
 
-        // scannerClientSocket = accept(broadcastSocketId, (struct sockaddr*)&scannerClientAddress, &scannerClientAddressSize);
-        // if (scannerClientSocket == -1) {
-        //     std::cerr << "Error accepting the connection." << std::endl;
-        //     return 1;
-        // }
+        liveClientSocket = accept(liveSocketId, (struct sockaddr*)&liveAddress, &liveClientAddressSize);
+        if (liveClientSocket == -1) {
+            std::cerr << "Error accepting the connection." << std::endl;
+            return 1;
+        }
 
         memset(buffer, '\0', BUFFER_SIZE);
         recv(serverClientSocket, buffer, BUFFER_SIZE, 0);
         if(strcmp(buffer, "desktop") == 0) {
             type = DESKTOP;
+            std::cerr << "desktop" << std::endl;
         }else if(strcmp(buffer, "mobile") == 0) {
             type = MOBILE;
+            std::cerr << "mobile" << std::endl;
         }
         ClientNode client;
         client.type = type;
@@ -204,7 +226,7 @@ int main() {
         client.configSocket = configClientSocket;
         client.broadcastSocket = broadcastClientSocket;
         client.calibrationImageSocket = calibrationImageClientSocket;
-        // client.scannerSocket = scannerClientSocket;
+        client.liveSocket = liveClientSocket;
         clients.push_back(client);
 
         // TODO: send scanner info to newly connected client

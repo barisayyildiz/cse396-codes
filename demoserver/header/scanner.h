@@ -86,7 +86,11 @@ cv::Mat fourPointTransform(cv::Mat image, std::vector<cv::Point2f> pts);
 Vertex getVertex(Vertex pCoord);
 void readConfigurationsFile(const char* fileName, Configuration& config);
 void writeConfigurationsFile(const char* fileName, Configuration& config);
-void mainScanner(int& clientSocket);
+void mainScanner();
+
+void mainScannerSend(unsigned char buffer[BUFFER_SIZE], int size, int desktopOnly=false);
+void mainScannerSend(char buffer[BUFFER_SIZE], int size, int desktopOnly=false);
+void mainScannerSend(const char* buffer, int size, int desktopOnly=false);
 
 void getScannerStateStr(char buffer[BUFFER_SIZE]);
 void sendImageForCalibration(int calibrationImageSocket);

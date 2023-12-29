@@ -21,6 +21,13 @@ int dataSocket;
 int configSocket;
 std::vector<ClientNode> clients;
 
+int serverSocketId;
+int configSocketId;
+int broadcastSocketId;
+int scannerSocketId;
+int calibrationImageId;
+int liveSocketId;
+
 void handleClientConfigSocket(int serverSocket, int configSocket, int calibrationImageSocket) {
     char buffer[BUFFER_SIZE];
     char tmpBuffer[BUFFER_SIZE];
@@ -76,7 +83,7 @@ void handleClientConfigSocket(int serverSocket, int configSocket, int calibratio
                 pthread_mutex_unlock(&scannerStateMutex);
                 broadcastMessage("scanner_state RUNNING");
 
-                std::thread tScanner(mainScanner, std::ref(serverSocket));
+                std::thread tScanner(mainScanner);
                 tScanner.detach();
             } else if(strcmp(token, "calibration_image") == 0) {
                 sendImageForCalibration(calibrationImageSocket);
@@ -93,9 +100,10 @@ void broadcastMessage(const char* message) {
     char buffer[BUFFER_SIZE];
     for(int i=0; i<clients.size(); i++) {
         memset(buffer, '\0', BUFFER_SIZE);
-        sprintf(buffer, "%s", message);
+        strncpy(buffer, message, BUFFER_SIZE-1);
+        // sprintf(buffer, "%s", message);
         std::cout << "broadcastmessage: " << buffer << std::endl;
-        send(clients.at(i).broadcastSocket, buffer, BUFFER_SIZE, 0);
+        send(clients.at(i).broadcastSocket, buffer, strlen(buffer), 0);
     }
 }
 
@@ -120,7 +128,7 @@ void handleClient(int& serverSocket) {
         }
 
         while(1) {
-            std::thread tScanner(mainScanner, std::ref(serverSocket));
+            std::thread tScanner(mainScanner);
             tScanner.join();
             break;
         }
