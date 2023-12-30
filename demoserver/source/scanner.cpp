@@ -210,7 +210,12 @@ void mainScannerSend(char buffer[BUFFER_SIZE], int size, int desktopOnly) {
             // std::cout << buffer << std::endl;
             std::cout << buffer << std::endl;
             std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", send" << std::endl;
-            send(clients.at(i).liveSocket, buffer, strlen(buffer), 0);
+            if(clients.at(i).type == MOBILE) {
+                send(clients.at(i).liveSocket, buffer, strlen(buffer), 0);
+            } else {
+                send(clients.at(i).liveSocket, buffer, size, 0);
+            }
+            // TODO: burası mobili patlatıyor...
             std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
             recv(clients.at(i).liveSocket, tmp, BUFFER_SIZE, 0);
             std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
@@ -312,7 +317,7 @@ void mainScanner() {
         img = cv::imread(save_path);
 
         save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
-        cv::imwrite(save_path, img);
+        // cv::imwrite(save_path, img);
         
         cv::Point2f pts[4];
         pts[0] = {config.top_left_x, config.top_left_y};
@@ -383,56 +388,12 @@ void mainScanner() {
             V.push_back(tempV[static_cast<int>(i)]);
         }
         meshPoints.push_back(V);
-        lineLength.push_back(-1 * V.size());
+        lineLength.push_back(-1 * V.size());        
         
-        
-        /*
-        int intv = 550; // Vertical resolution
-        intv = tempV.size() / intv;
-
-        if (!tempV.empty()) {
-            vector<Vertex> V;
-            V.push_back(tempV[0]);
-
-            for (int ind = 1; ind < tempV.size() - 2; ind++) {
-                if(intv == 0) {
-                    V.push_back(tempV[ind]);
-                } else if (ind % intv == 0) {
-                    V.push_back(tempV[ind]);
-                }
-            }
-
-            V.push_back(tempV[tempV.size() - 1]);
-            meshPoints.push_back(V);
-            lineLength.push_back(-1 * V.size());
-        }*/
-
-
-        /*
-        int intv = 550; // Vertical resolution
-        intv = tempV.size() / intv;
-
-        if (!tempV.empty()) {
-            vector<Vertex> V;
-            V.push_back(tempV[0]);
-
-            for (int ind = 1; ind < tempV.size() - 2; ind++) {
-                if(intv == 0) {
-                    V.push_back(tempV[ind]);
-                } else if (ind % intv == 0) {
-                    V.push_back(tempV[ind]);
-                }
-            }
-
-            V.push_back(tempV[tempV.size() - 1]);
-            meshPoints.push_back(V);
-            lineLength.push_back(-1 * V.size());
-        }*/
-
         std::cout << "theta: " << theta << std::endl;
         std::cout << meshPoints.back().size() << std::endl;
 
-        if(true) {            
+        if(true) {
             memset(buffer, '\0', BUFFER_SIZE);
             sprintf(buffer, "ROUND %d %d", counter+1, config.horizontal_precision);
             std::cout << "buffer: " << buffer << std::endl;

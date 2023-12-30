@@ -72,6 +72,7 @@ void handleClientConfigSocket(int serverSocket, int configSocket, int calibratio
             broadcastMessage(tmpBuffer);
         } else if(strcmp(token, "command") == 0) {
             token = strtok(NULL, " ");
+            std::cout << token << std::endl;
             if(strcmp(token, "cancel") == 0) {
                 pthread_mutex_lock(&scannerStateMutex);
                 scannerState = CANCELLED;
@@ -87,11 +88,24 @@ void handleClientConfigSocket(int serverSocket, int configSocket, int calibratio
                 tScanner.detach();
             } else if(strcmp(token, "calibration_image") == 0) {
                 sendImageForCalibration(calibrationImageSocket);
+            } else if(strcmp(token, "disconnect") == 0) {
+                removeClient(configSocket);
             }
         }
 
         writeConfigurationsFile("configurations.txt", config);
     }
+}
+
+void removeClient(int configSocket) {
+    int index = -1;
+    for(int i=0; i<clients.size(); i++) {
+        if(clients.at(i).configSocket == configSocket) {
+            index = i;
+        }
+    }
+    clients.erase(clients.begin() + index);
+    std::cerr << clients.size() << std::endl;
 }
 
 

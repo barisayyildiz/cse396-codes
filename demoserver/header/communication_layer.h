@@ -48,4 +48,6 @@ void broadcastMessage(const char* message);
 void handleClientConfigSocket(int serverSocket, int configSocket, int calibrationImageSocket);
 void readFromAllClients();
 
+void removeClient(int configSocket);
+
 #endif
