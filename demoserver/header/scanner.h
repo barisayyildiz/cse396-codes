@@ -89,8 +89,9 @@ void writeConfigurationsFile(const char* fileName, Configuration& config);
 void mainScanner();
 
 void mainScannerSend(unsigned char buffer[BUFFER_SIZE], int size, int desktopOnly=false);
-void mainScannerSend(char buffer[BUFFER_SIZE], int size, int desktopOnly=false);
+void mainScannerSend(const std::vector<char>& buffer, int desktopOnly=false);
 void mainScannerSend(const char* buffer, int size, int desktopOnly=false);
+void mainScannerSend(int *objSize);
 
 void getScannerStateStr(char buffer[BUFFER_SIZE]);
 void sendImageForCalibration(int calibrationImageSocket);

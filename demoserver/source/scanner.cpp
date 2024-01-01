@@ -195,31 +195,58 @@ void mainScannerSend(uchar buffer[BUFFER_SIZE], int size, int desktopOnly) {
             std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", send" << std::endl;
             send(clients.at(i).liveSocket, buffer, size, 0);
             std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
-            recv(clients.at(i).liveSocket, tmp, BUFFER_SIZE, 0);
+            recv(clients.at(i).liveSocket, tmp, 3, 0);
             std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
             // std::cout << buffer << std::endl;
         }
     }
 }
 
-void mainScannerSend(char buffer[BUFFER_SIZE], int size, int desktopOnly) {
+void mainScannerSend(int *objSize) {
     char tmp[BUFFER_SIZE];
     for(int i=0; i<clients.size(); i++) {
-        if(clients.at(i).type == DESKTOP || (clients.at(i).type == MOBILE && !desktopOnly)) {
+        if(clients.at(i).type == DESKTOP) {
             // std::cout << clients.at(i).liveSocket << ", " << buffer << std::endl;
             // std::cout << buffer << std::endl;
-            std::cout << buffer << std::endl;
-            std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", send" << std::endl;
-            if(clients.at(i).type == MOBILE) {
-                send(clients.at(i).liveSocket, buffer, strlen(buffer), 0);
-            } else {
-                send(clients.at(i).liveSocket, buffer, size, 0);
-            }
-            // TODO: burası mobili patlatıyor...
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", send" << std::endl;7
+            send(clients.at(i).liveSocket, objSize, sizeof(int), 0);
+            // send(clients.at(i).liveSocket, buffer, size, 0);
             std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
-            recv(clients.at(i).liveSocket, tmp, BUFFER_SIZE, 0);
+            recv(clients.at(i).liveSocket, tmp, 3, 0);
             std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
             // std::cout << buffer << std::endl;
+        }
+    }
+}
+
+void mainScannerSend(const std::vector<char>& buffer, int desktopOnly) {
+    for (const auto& client : clients) {
+        if (client.type == DESKTOP || (client.type == MOBILE && !desktopOnly)) {
+            std::cout << "Buffer: ";
+            for (char ch : buffer) {
+                std::cout << ch;
+            }
+            std::cout << std::endl;
+
+            if (client.type == MOBILE) {
+                send(client.liveSocket, buffer.data(), buffer.size(), 0);
+            } else {
+                ssize_t sentBytes = send(client.liveSocket, buffer.data(), buffer.size(), 0);
+                std::cout << "sent_bytes: " << sentBytes << std::endl;
+            }
+            std::cout << "sent" << std::endl;
+
+            // Receive acknowledgment
+            std::vector<char> acknowledgment(3, '\0');
+            ssize_t receivedBytes = recv(client.liveSocket, acknowledgment.data(), 3, 0);
+            std::cerr << "receivedbytes: " << receivedBytes << std::endl;
+
+            // while (receivedBytes != 3) {
+            //     receivedBytes = recv(client.liveSocket, acknowledgment.data(), 3, 0);
+            //     std::cerr << "receivedbytes: " << receivedBytes << std::endl;
+            // }
+
+            // Process acknowledgment if needed
         }
     }
 }
@@ -238,7 +265,7 @@ void mainScannerSend(const char* buffer, int size, int desktopOnly) {
             send(clients.at(i).liveSocket, localBuffer, size, 0);
             // TODO: burası mobilde çalışmıyor!!!!!
             std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
-            recv(clients.at(i).liveSocket, localBuffer, BUFFER_SIZE, 0);
+            recv(clients.at(i).liveSocket, localBuffer, 3, 0);
             std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
             // std::cout << buffer << std::endl;
         }
@@ -270,7 +297,8 @@ void mainScanner() {
     std::cout << "main scanner...." << std::endl;
     
     srand(time(0));
-    char buffer[BUFFER_SIZE];
+    // char buffer[BUFFER_SIZE];
+    std::vector<char> buffer(BUFFER_SIZE, '\0');
     bool isCancelled = false;
 
     // recv(clientSocket, buffer, BUFFER_SIZE, 0);
@@ -293,9 +321,17 @@ void mainScanner() {
     currentBottomRightX = config.bottom_right_x;
     currentBottomRightY = config.bottom_right_y;
 
-    memset(buffer, '\0', BUFFER_SIZE);
-    sprintf(buffer, "START_SCANNING");
-    mainScannerSend(buffer, BUFFER_SIZE);
+
+    std::fill(buffer.begin(), buffer.end(), '\0');
+    std::ostringstream oss;
+    oss << "START_SCANNING";
+    std::string message = oss.str();
+    std::copy(message.begin(), message.end(), buffer.begin());
+    mainScannerSend(buffer);
+
+    // memset(buffer, '\0', BUFFER_SIZE);
+    // sprintf(buffer, "START_SCANNING");
+    // mainScannerSend(buffer, BUFFER_SIZE);
     // send(clientSocket, buffer, sizeof(buffer), 0);
 
     while(theta < 360) {
@@ -394,19 +430,35 @@ void mainScanner() {
         std::cout << meshPoints.back().size() << std::endl;
 
         if(true) {
-            memset(buffer, '\0', BUFFER_SIZE);
-            sprintf(buffer, "ROUND %d %d", counter+1, config.horizontal_precision);
-            std::cout << "buffer: " << buffer << std::endl;
-            // send(clientSocket, buffer, sizeof(buffer), 0);
-            mainScannerSend(buffer, BUFFER_SIZE);
+            std::fill(buffer.begin(), buffer.end(), '\0');
+            oss.str("");
+            oss << "ROUND";
+            oss << " " << counter+1 << " " << config.horizontal_precision;
+            message = oss.str();
+            std::copy(message.begin(), message.end(), buffer.begin());
+            mainScannerSend(buffer);
 
-            memset(buffer, '\0', BUFFER_SIZE);
-            sprintf(buffer, "NUMBER_OF_VERTICES %d", (int)meshPoints.back().size());
-            // send(clientSocket, buffer, sizeof(buffer), 0);
-            mainScannerSend(buffer, BUFFER_SIZE, true);
-            std::cout << "buffer: " << buffer << std::endl;
-            printf("size: %s\n", buffer);
-            // usleep(300000);
+            // memset(buffer, '\0', BUFFER_SIZE);
+            // sprintf(buffer, "ROUND %d %d", counter+1, config.horizontal_precision);
+            // std::cout << "buffer: " << buffer << std::endl;
+            // // send(clientSocket, buffer, sizeof(buffer), 0);
+            // mainScannerSend(buffer, BUFFER_SIZE);
+
+            std::fill(buffer.begin(), buffer.end(), '\0');
+            oss.str("");
+            oss << "NUMBER_OF_VERTICES";
+            oss << " " << (int)meshPoints.back().size();
+            message = oss.str();
+            std::copy(message.begin(), message.end(), buffer.begin());
+            mainScannerSend(buffer, true);
+
+            // memset(buffer, '\0', BUFFER_SIZE);
+            // sprintf(buffer, "NUMBER_OF_VERTICES %d", (int)meshPoints.back().size());
+            // // send(clientSocket, buffer, sizeof(buffer), 0);
+            // mainScannerSend(buffer, BUFFER_SIZE, true);
+            // std::cout << "buffer: " << buffer << std::endl;
+            // printf("size: %s\n", buffer);
+            // // usleep(300000);
         }
 
         vector<Vertex> vertices = meshPoints.back();
@@ -414,19 +466,33 @@ void mainScanner() {
 
         if(true) {
             for(int i=0; i<numOfScannedPoints; i++) {
-                memset(buffer, '\0', BUFFER_SIZE);
+                std::fill(buffer.begin(), buffer.end(), '\0');
                 double x = vertices.at(i).x, y = vertices.at(i).y, z = vertices.at(i).z;
+                oss.str("");
+                oss << x << " " << y << " " << z;
+                message = oss.str();
+                std::copy(message.begin(), message.end(), buffer.begin());
+                mainScannerSend(buffer, true);
 
-                sprintf(buffer, "%lf %lf %lf", x, y, z);
-                mainScannerSend(buffer, BUFFER_SIZE, true);
+                // memset(buffer, '\0', BUFFER_SIZE);
+                // double x = vertices.at(i).x, y = vertices.at(i).y, z = vertices.at(i).z;
+
+                // sprintf(buffer, "%lf %lf %lf", x, y, z);
+                // mainScannerSend(buffer, BUFFER_SIZE, true);
                 // send(clientSocket, buffer, sizeof(buffer), 0);
                 // usleep(3);
                 // recv(clientSocket, buffer, sizeof(buffer), 0);
             }
-            memset(buffer, '\0', BUFFER_SIZE);
-            sprintf(buffer, "IMAGES");
-            // send(clientSocket, buffer, sizeof(buffer), 0);
-            mainScannerSend(buffer, BUFFER_SIZE, true);
+            // memset(buffer, '\0', BUFFER_SIZE);
+            // sprintf(buffer, "IMAGES");
+            // // send(clientSocket, buffer, sizeof(buffer), 0);
+            // mainScannerSend(buffer, BUFFER_SIZE, true);
+            std::fill(buffer.begin(), buffer.end(), '\0');
+            oss.str("");
+            oss << "IMAGES";
+            message = oss.str();
+            std::copy(message.begin(), message.end(), buffer.begin());
+            mainScannerSend(buffer, true);
 
             // send image size
             std::vector<uchar> imageBuffer;
@@ -434,11 +500,13 @@ void mainScanner() {
             int imgSize = imageBuffer.size();
             std::cout << "livesocket for image: " << clients.at(0).liveSocket << std::endl;
             std::cout << "first image size: " << imgSize << std::endl;
-            for(int i=0; i<clients.size(); i++) {
-                if(clients.at(i).type == DESKTOP) {
-                    send(clients.at(i).liveSocket, &imgSize, sizeof(int), 0);
-                }
-            }
+            mainScannerSend(&imgSize);
+            // for(int i=0; i<clients.size(); i++) {
+            //     if(clients.at(i).type == DESKTOP) {
+            //         send(clients.at(i).liveSocket, &imgSize, sizeof(int), 0);
+            //         recv(clients.at(i).liveSocket, buffer, 3, 0);
+            //     }
+            // }
             
             // send image
             int chunkSize = BUFFER_SIZE; // Choose an appropriate chunk size
@@ -456,12 +524,14 @@ void mainScanner() {
             imgSize = imageBuffer.size();
             std::cout << "livesocket for image: " << clients.at(0).liveSocket << std::endl;
             std::cout << "second image size: " << imgSize << std::endl;
+            mainScannerSend(&imgSize);
             // send(clientSocket, &imgSize, sizeof(int), 0);
-            for(int i=0; i<clients.size(); i++) {
-                if(clients.at(i).type == DESKTOP) {
-                    send(clients.at(i).liveSocket, &imgSize, sizeof(int), 0);
-                }
-            }
+            // for(int i=0; i<clients.size(); i++) {
+            //     if(clients.at(i).type == DESKTOP) {
+            //         send(clients.at(i).liveSocket, &imgSize, sizeof(int), 0);
+            //         recv(clients.at(i).liveSocket, buffer, 3, 0);
+            //     }
+            // }
             
             // send image
             chunkSize = BUFFER_SIZE; // Choose an appropriate chunk size
@@ -482,10 +552,17 @@ void mainScanner() {
 
     std::cout << "outside" << std::endl;
 
-    memset(buffer, '\0', BUFFER_SIZE);
-    sprintf(buffer, "FINISH_SCANNING");
-    // send(clientSocket, buffer, sizeof(buffer), 0);
-    mainScannerSend(buffer, BUFFER_SIZE);
+    std::fill(buffer.begin(), buffer.end(), '\0');
+    oss.str("");
+    oss << "FINISH_SCANNING";
+    message = oss.str();
+    std::copy(message.begin(), message.end(), buffer.begin());
+    mainScannerSend(buffer);
+
+    // memset(buffer, '\0', BUFFER_SIZE);
+    // sprintf(buffer, "FINISH_SCANNING");
+    // // send(clientSocket, buffer, sizeof(buffer), 0);
+    // mainScannerSend(buffer, BUFFER_SIZE);
 
     if(!isCancelled) {
         // memset(buffer, '\0', BUFFER_SIZE);
@@ -606,10 +683,18 @@ void mainScanner() {
         // Send the size of the .obj content to the client
         int objSize = objContent.size();
         
-        memset(buffer, '\0', BUFFER_SIZE);
-        sprintf(buffer, "FILE %d", objSize);
-        // send(clientSocket, buffer, sizeof(buffer), 0);
-        mainScannerSend(buffer, BUFFER_SIZE);
+        // memset(buffer, '\0', BUFFER_SIZE);
+        // sprintf(buffer, "FILE %d", objSize);
+        // // send(clientSocket, buffer, sizeof(buffer), 0);
+        // mainScannerSend(buffer, BUFFER_SIZE);
+
+        std::fill(buffer.begin(), buffer.end(), '\0');
+        oss.str("");
+        oss << "FILE";
+        oss << " " << objSize;
+        message = oss.str();
+        std::copy(message.begin(), message.end(), buffer.begin());
+        mainScannerSend(buffer);
 
         // Send the .obj content to the client in packages of size 1024
         int chunkSize = BUFFER_SIZE;
@@ -620,13 +705,21 @@ void mainScanner() {
             // recv(clients.at(0).liveSocket, buffer, BUFFER_SIZE, 0);
         }
 
-        for(int i=0; i<clients.size(); i++) {
-            memset(buffer, '\0', BUFFER_SIZE);
-            sprintf(buffer, "FILE_END");
-            send(clients.at(i).liveSocket, buffer, strlen(buffer), 0);
-            recv(clients.at(i).liveSocket, buffer, BUFFER_SIZE, 0);
-            // send(clients.at(i).liveSocket, &objSize, sizeof(int), 0);
-        }
+        std::fill(buffer.begin(), buffer.end(), '\0');
+        oss.str("");
+        oss << "FILE_END";
+        oss << " " << objSize;
+        message = oss.str();
+        std::copy(message.begin(), message.end(), buffer.begin());
+        mainScannerSend(buffer);
+
+        // for(int i=0; i<clients.size(); i++) {
+        //     memset(buffer, '\0', BUFFER_SIZE);
+        //     sprintf(buffer, "FILE_END");
+        //     send(clients.at(i).liveSocket, buffer, strlen(buffer), 0);
+        //     recv(clients.at(i).liveSocket, buffer, BUFFER_SIZE, 0);
+        //     // send(clients.at(i).liveSocket, &objSize, sizeof(int), 0);
+        // }
 
         pthread_mutex_lock(&scannerStateMutex);
         scannerState = FINISHED;
