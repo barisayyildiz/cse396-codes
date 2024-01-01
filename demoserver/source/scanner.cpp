@@ -11,6 +11,9 @@
 #include <sys/socket.h>
 #include "../header/scanner.h"
 #include "../header/communication_layer.h"
+#include <wiringPi.h>
+
+int prevButtonState = LOW;
 
 int currentStepNumber;
 int currentHorizontalPrecision;

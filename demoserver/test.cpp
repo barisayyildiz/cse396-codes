@@ -17,6 +17,8 @@
 // for signal handling
 #include <signal.h>
 
+#include <wiringPi.h>
+
 #include <chrono>
 #include "header/scanner.h"
 #include "header/communication_layer.h"
@@ -44,9 +46,68 @@ void signalCallbackHandler(int signum) {
     close(liveSocketId);
 }
 
+void buttonListener() {
+    // Pin modlarını ayarla
+    pinMode(BUTTON_PIN, INPUT);
+    pinMode(LED_PIN_1, OUTPUT);
+    pinMode(LED_PIN_2, OUTPUT);
+
+    digitalWrite(LED_PIN_1, HIGH);
+
+    // Ana döngü
+    while (true) {
+        // Buton durumunu oku
+        int buttonState = digitalRead(BUTTON_PIN);
+        // std::cout << buttonState << std::endl;
+
+        // Buton basıldığında
+        if (buttonState == HIGH) {
+            // LED'leri yak
+            int startScanning = false;
+            pthread_mutex_lock(&scannerStateMutex);
+            if(prevButtonState == LOW && scannerState != RUNNING) {
+                startScanning = true;
+            }
+            pthread_mutex_unlock(&scannerStateMutex);
+            if(startScanning) {
+                pthread_mutex_lock(&scannerStateMutex);
+                scannerState = RUNNING;
+                pthread_mutex_unlock(&scannerStateMutex);
+
+                broadcastMessage("scanner_state RUNNING");
+                std::thread tScanner(mainScanner);
+                tScanner.detach();
+            }
+            digitalWrite(LED_PIN_2, HIGH);
+        } else {
+            int stopScanning = false;
+            pthread_mutex_lock(&scannerStateMutex);
+            if(prevButtonState == HIGH && scannerState == RUNNING) {
+                stopScanning = true;
+            }
+            pthread_mutex_unlock(&scannerStateMutex);
+            if(stopScanning) {
+                pthread_mutex_lock(&scannerStateMutex);
+                scannerState = CANCELLED;
+                pthread_mutex_unlock(&scannerStateMutex);
+                broadcastMessage("scanner_state CANCELLED");
+            }
+            digitalWrite(LED_PIN_2, LOW);
+        }
+        prevButtonState = buttonState;
+        usleep(30000);
+    }
+}
+
 int main() {
     // signal(SIGTERM, signalCallbackHandler);
     // signal(SIGINT, signalCallbackHandler);
+    wiringPiSetupGpio();
+    digitalWrite(LED_PIN_1, LOW);
+    digitalWrite(LED_PIN_2, LOW);
+
+    std::thread tButton(buttonListener);
+    tButton.detach();
 
     // initialize scanner state
     Configuration config;

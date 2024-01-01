@@ -23,6 +23,10 @@
 #define STEPPER_PIN_3 8
 #define STEPPER_PIN_4 25
 
+#define BUTTON_PIN 17
+#define LED_PIN_1 27
+#define LED_PIN_2 22
+
 #define STEP_PER_MOVEMENT 8
 #define DELAY_ONE_STEP 8
 
@@ -32,6 +36,9 @@ enum ScannerState {
     CANCELLED,
     IDLE
 };
+
+// hardware state
+extern int prevButtonState;
 
 // current scan values
 extern int currentStepNumber;
