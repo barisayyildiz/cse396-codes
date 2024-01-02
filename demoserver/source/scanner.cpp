@@ -14,6 +14,7 @@
 #include <wiringPi.h>
 
 int prevButtonState = LOW;
+int stepNumber = 0;
 
 int currentStepNumber;
 int currentHorizontalPrecision;
@@ -28,6 +29,8 @@ pthread_mutex_t fileMutex = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_mutex_t scannerStateMutex = PTHREAD_MUTEX_INITIALIZER;
 ScannerState scannerState = IDLE;
+
+pthread_mutex_t cameraMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int desktopSocket;
 int mobileSocket;
@@ -77,6 +80,59 @@ Vertex getVertex(Vertex pCoord) {
     double y = d * sin(t);
     double z = H;
     return Vertex((int)x, (int)y, (int)z);
+}
+
+void oneStep(){
+    // std::cout << "counter : " << ++counter << std::endl;
+    switch(stepNumber){
+      case 0:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, HIGH);
+      break;
+      case 1:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, HIGH);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+      case 2:
+      digitalWrite(STEPPER_PIN_1, LOW);
+      digitalWrite(STEPPER_PIN_2, HIGH);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+      case 3:
+      digitalWrite(STEPPER_PIN_1, HIGH);
+      digitalWrite(STEPPER_PIN_2, LOW);
+      digitalWrite(STEPPER_PIN_3, LOW);
+      digitalWrite(STEPPER_PIN_4, LOW);
+      break;
+    }
+    stepNumber++;
+    if(stepNumber > 3){
+        stepNumber = 0;
+    }
+}
+
+void move(int stepPrecision){
+    int precisionCounter = 0;
+    while(precisionCounter < stepPrecision){
+        oneStep();
+        precisionCounter++;
+        delay(DELAY_ONE_STEP);
+    }
+}
+
+void takePic (char* filename)
+{
+	int pid, status;
+	if((pid = fork()) == 0)
+	{
+		execl("/usr/bin/raspistill", "raspistill", "-t", "200", "-w", "1024", "-h", "768", "-o", filename, (char *)NULL);
+	}
+	waitpid(pid, &status, 0);
 }
 
 void setConfigValues(const char* key, const char* value, Configuration& config) {
@@ -171,9 +227,16 @@ void getScannerStateStr(char buffer[BUFFER_SIZE]) {
 
 void sendImageForCalibration(int calibrationImageSocket) {
     char buffer[BUFFER_SIZE];
-    
-    std::string save_path = "imgs_db/original/0.jpg";
-    cv::Mat img = cv::imread(save_path);
+    char filename[] = "calibration.jpg";
+    cv::Mat img;
+
+    pthread_mutex_lock(&cameraMutex);
+    takePic(filename);
+    img = cv::imread(filename);
+    pthread_mutex_unlock(&cameraMutex);
+
+    // std::string save_path = "imgs_db/original/0.jpg";
+    // cv::Mat img = cv::imread(save_path);
     std::vector<uchar> imageBuffer;
     imencode(".jpg", img, imageBuffer);
     int imgSize = imageBuffer.size();
@@ -352,11 +415,18 @@ void mainScanner() {
         
         std::string save_path;
         
-        save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
-        img = cv::imread(save_path);
+        // save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
+        // img = cv::imread(save_path);
 
-        save_path = "imgs_db/original/" + std::to_string(counter) + ".jpg";
-        // cv::imwrite(save_path, img);
+        // take actual picture
+        char filename[] = "output.jpg";
+        pthread_mutex_lock(&cameraMutex);
+        takePic(filename);
+        img = cv::imread(filename);
+        pthread_mutex_unlock(&cameraMutex);
+
+        save_path = "imgs/original/" + std::to_string(counter) + ".jpg";
+        cv::imwrite(save_path, img);
         
         cv::Point2f pts[4];
         pts[0] = {config.top_left_x, config.top_left_y};
@@ -365,7 +435,7 @@ void mainScanner() {
         pts[3] = {config.top_left_x, config.bottom_right_y};
 
         cropped = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
-        save_path = "imgs_db/four_points/" + std::to_string(counter) + ".jpg";
+        save_path = "imgs/four_points/" + std::to_string(counter) + ".jpg";
         cv::imwrite(save_path, cropped);
 
         int h = cropped.rows;
@@ -395,7 +465,7 @@ void mainScanner() {
                 }
             }
         }
-        save_path = "imgs_db/red_line/" + std::to_string(counter) + ".jpg";
+        save_path = "imgs/red_line/" + std::to_string(counter) + ".jpg";
         cv::imwrite(save_path, backG*255);
 
         for (int r = 0; r < h; r++) {
@@ -551,6 +621,8 @@ void mainScanner() {
         std::cout << "counter: " << counter << std::endl;
         counter++;
         currentStepNumber = counter;
+
+        move(2048 / (int)config.horizontal_precision);
     }
 
     std::cout << "outside" << std::endl;

@@ -56,6 +56,10 @@ extern int desktopSocket;
 extern int mobileSocket;
 extern int clientCounter;
 
+extern pthread_mutex_t cameraMutex;
+
+extern int stepNumber;
+
 struct Configuration {
     int horizontal_precision, vertical_precision;
     float top_left_x, top_left_y;
@@ -102,5 +106,10 @@ void mainScannerSend(int *objSize);
 
 void getScannerStateStr(char buffer[BUFFER_SIZE]);
 void sendImageForCalibration(int calibrationImageSocket);
+
+// from converter
+void oneStep(bool direction);
+void move(int stepPrecision);
+void takePic (char* filename);
 
 #endif

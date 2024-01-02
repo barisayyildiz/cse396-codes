@@ -52,6 +52,11 @@ void buttonListener() {
     pinMode(LED_PIN_1, OUTPUT);
     pinMode(LED_PIN_2, OUTPUT);
 
+    pinMode(STEPPER_PIN_1, OUTPUT);
+    pinMode(STEPPER_PIN_2, OUTPUT);
+    pinMode(STEPPER_PIN_3, OUTPUT);
+    pinMode(STEPPER_PIN_4, OUTPUT);
+
     digitalWrite(LED_PIN_1, HIGH);
 
     // Ana döngü
