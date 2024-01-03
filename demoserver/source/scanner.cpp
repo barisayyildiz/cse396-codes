@@ -127,12 +127,12 @@ void move(int stepPrecision){
 
 void takePic (char* filename)
 {
-	int pid, status;
-	if((pid = fork()) == 0)
-	{
-		execl("/usr/bin/raspistill", "raspistill", "-t", "200", "-w", "1024", "-h", "768", "-o", filename, (char *)NULL);
-	}
-	waitpid(pid, &status, 0);
+    int pid, status;
+    if((pid = fork()) == 0)
+    {
+        execl("/usr/bin/raspistill", "raspistill", "-t", "200", "-w", "1024", "-h", "768", "-o", filename, (char *)NULL);
+    }
+    waitpid(pid, &status, 0);
 }
 
 void setConfigValues(const char* key, const char* value, Configuration& config) {
@@ -235,6 +235,8 @@ void sendImageForCalibration(int calibrationImageSocket) {
     img = cv::imread(filename);
     pthread_mutex_unlock(&cameraMutex);
 
+    // img = cv::imread("imgs_db/original/0.jpg");
+
     // std::string save_path = "imgs_db/original/0.jpg";
     // cv::Mat img = cv::imread(save_path);
     std::vector<uchar> imageBuffer;
@@ -257,12 +259,12 @@ void mainScannerSend(uchar buffer[BUFFER_SIZE], int size, int desktopOnly) {
     for(int i=0; i<clients.size(); i++) {
         if(clients.at(i).type == DESKTOP || (clients.at(i).type == MOBILE && !desktopOnly)) {
             // std::cout << clients.at(i).liveSocket << ", " << buffer << std::endl;
-            std::cout << buffer << std::endl;
-            std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", send" << std::endl;
+            // std::cout << buffer << std::endl;
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", send" << std::endl;
             send(clients.at(i).liveSocket, buffer, size, 0);
-            std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
             recv(clients.at(i).liveSocket, tmp, 3, 0);
-            std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
             // std::cout << buffer << std::endl;
         }
     }
@@ -277,9 +279,9 @@ void mainScannerSend(int *objSize) {
             // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", send" << std::endl;7
             send(clients.at(i).liveSocket, objSize, sizeof(int), 0);
             // send(clients.at(i).liveSocket, buffer, size, 0);
-            std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
             recv(clients.at(i).liveSocket, tmp, 3, 0);
-            std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
             // std::cout << buffer << std::endl;
         }
     }
@@ -288,24 +290,58 @@ void mainScannerSend(int *objSize) {
 void mainScannerSend(const std::vector<char>& buffer, int desktopOnly) {
     for (const auto& client : clients) {
         if (client.type == DESKTOP || (client.type == MOBILE && !desktopOnly)) {
-            std::cout << "Buffer: ";
+            // std::cout << "Buffer: ";
             for (char ch : buffer) {
-                std::cout << ch;
+                // std::cout << ch;
             }
-            std::cout << std::endl;
+            // std::cout << std::endl;
 
             if (client.type == MOBILE) {
-                send(client.liveSocket, buffer.data(), buffer.size(), 0);
+                const char* charArray = buffer.data();
+                send(client.liveSocket, charArray, strlen(charArray), 0);
             } else {
                 ssize_t sentBytes = send(client.liveSocket, buffer.data(), buffer.size(), 0);
-                std::cout << "sent_bytes: " << sentBytes << std::endl;
+                // std::cout << "sent_bytes: " << sentBytes << std::endl;
             }
-            std::cout << "sent" << std::endl;
+            // std::cout << "sent" << std::endl;
 
             // Receive acknowledgment
             std::vector<char> acknowledgment(3, '\0');
             ssize_t receivedBytes = recv(client.liveSocket, acknowledgment.data(), 3, 0);
-            std::cerr << "receivedbytes: " << receivedBytes << std::endl;
+            // std::cerr << "receivedbytes: " << receivedBytes << std::endl;
+
+            // while (receivedBytes != 3) {
+            //     receivedBytes = recv(client.liveSocket, acknowledgment.data(), 3, 0);
+            //     std::cerr << "receivedbytes: " << receivedBytes << std::endl;
+            // }
+
+            // Process acknowledgment if needed
+        }
+    }
+}
+
+void mainScannerSend(const std::vector<char>& buffer, ClientType clientType) {
+    for (const auto& client : clients) {
+        if (client.type == clientType) {
+            // std::cout << "Buffer: ";
+            for (char ch : buffer) {
+                // std::cout << ch;
+            }
+            // std::cout << std::endl;
+
+            if (client.type == MOBILE) {
+                const char* charArray = buffer.data();
+                send(client.liveSocket, charArray, strlen(charArray), 0);
+            } else {
+                ssize_t sentBytes = send(client.liveSocket, buffer.data(), buffer.size(), 0);
+                // std::cout << "sent_bytes: " << sentBytes << std::endl;
+            }
+            // std::cout << "sent" << std::endl;
+
+            // Receive acknowledgment
+            std::vector<char> acknowledgment(3, '\0');
+            ssize_t receivedBytes = recv(client.liveSocket, acknowledgment.data(), 3, 0);
+            // std::cerr << "receivedbytes: " << receivedBytes << std::endl;
 
             // while (receivedBytes != 3) {
             //     receivedBytes = recv(client.liveSocket, acknowledgment.data(), 3, 0);
@@ -327,14 +363,53 @@ void mainScannerSend(const char* buffer, int size, int desktopOnly) {
 
             // std::cout << clients.at(i).liveSocket << ", " << localBuffer << std::endl;
             // std::cout << buffer << std::endl;
-            std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", send" << std::endl;
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", send" << std::endl;
             send(clients.at(i).liveSocket, localBuffer, size, 0);
             // TODO: burası mobilde çalışmıyor!!!!!
-            std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
             recv(clients.at(i).liveSocket, localBuffer, 3, 0);
-            std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
             // std::cout << buffer << std::endl;
         }
+    }
+}
+
+void mainScannerSend(const char* buffer, int size, ClientType clientType) {
+    // std::cout << "mainScannersend mobile\n";
+    for(int i=0; i<clients.size(); i++) {
+        if(clients.at(i).type == clientType) {
+            // Create a local non-const buffer
+            char localBuffer[BUFFER_SIZE];
+            std::memcpy(localBuffer, buffer, size);
+
+            // std::cout << clients.at(i).liveSocket << ", " << localBuffer << std::endl;
+            // std::cout << buffer << std::endl;
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", send" << std::endl;
+            send(clients.at(i).liveSocket, localBuffer, size, 0);
+            // TODO: burası mobilde çalışmıyor!!!!!
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv" << std::endl;
+            recv(clients.at(i).liveSocket, localBuffer, 3, 0);
+            // std::cerr << clients.at(i).type << ", " << clients.at(i).liveSocket << ", recv2" << std::endl;
+            // std::cout << buffer << std::endl;
+        }
+    }
+}
+
+void createObjFile(Mesh mesh, std::string filename) {
+    // // create .obj file
+    // std::string fileToWrite = "3d.obj";
+    std::ofstream file(filename);
+
+    if (file.is_open()) {
+        for (Vertex& point : mesh.getPoints()) {
+            file << point;
+        }
+        for (Face& face : mesh.getFaces()) {
+            file << face;
+        }
+        file.close();
+    } else {
+        std::cerr << "Error: Unable to open file for writing." << std::endl;
     }
 }
 
@@ -435,7 +510,7 @@ void mainScanner() {
         pts[3] = {config.top_left_x, config.bottom_right_y};
 
         cropped = fourPointTransform(img, std::vector<cv::Point2f>(pts, pts + 4));
-        save_path = "imgs/four_points/" + std::to_string(counter) + ".jpg";
+        save_path = "imgs_db/four_points/" + std::to_string(counter) + ".jpg";
         cv::imwrite(save_path, cropped);
 
         int h = cropped.rows;
@@ -465,7 +540,7 @@ void mainScanner() {
                 }
             }
         }
-        save_path = "imgs/red_line/" + std::to_string(counter) + ".jpg";
+        save_path = "imgs_db/red_line/" + std::to_string(counter) + ".jpg";
         cv::imwrite(save_path, backG*255);
 
         for (int r = 0; r < h; r++) {
@@ -480,17 +555,17 @@ void mainScanner() {
                 }
             }
         }
-        std::cout << "tempV size: " << tempV.size() << std::endl;
+        // std::cout << "tempV size: " << tempV.size() << std::endl;
         
         int percentage = 100;
         int itemsToKeep = static_cast<int>(tempV.size() * (config.vertical_precision / 100.0));
-        std::cout << "items to keep: " << itemsToKeep << std::endl;
+        // std::cout << "items to keep: " << itemsToKeep << std::endl;
         itemsToKeep = std::max(itemsToKeep, 1);
 
         double stepSize = static_cast<double>(tempV.size()) / itemsToKeep;
 
         
-        std::cout << "stepSize: " << stepSize << std::endl;
+        // std::cout << "stepSize: " << stepSize << std::endl;
         vector<Vertex> V;
 
         for (double i = 0; i < tempV.size(); i += stepSize) {
@@ -571,8 +646,8 @@ void mainScanner() {
             std::vector<uchar> imageBuffer;
             imencode(".jpg", img, imageBuffer);
             int imgSize = imageBuffer.size();
-            std::cout << "livesocket for image: " << clients.at(0).liveSocket << std::endl;
-            std::cout << "first image size: " << imgSize << std::endl;
+            // std::cout << "livesocket for image: " << clients.at(0).liveSocket << std::endl;
+            // std::cout << "first image size: " << imgSize << std::endl;
             mainScannerSend(&imgSize);
             // for(int i=0; i<clients.size(); i++) {
             //     if(clients.at(i).type == DESKTOP) {
@@ -593,24 +668,17 @@ void mainScanner() {
             // send image size
             imageBuffer;
             imencode(".jpg", backG*255, imageBuffer);
-            std::cout << "imageBuffer size: " << imageBuffer.size() << std::endl;
+            // std::cout << "imageBuffer size: " << imageBuffer.size() << std::endl;
             imgSize = imageBuffer.size();
-            std::cout << "livesocket for image: " << clients.at(0).liveSocket << std::endl;
-            std::cout << "second image size: " << imgSize << std::endl;
+            // std::cout << "livesocket for image: " << clients.at(0).liveSocket << std::endl;
+            // std::cout << "second image size: " << imgSize << std::endl;
             mainScannerSend(&imgSize);
-            // send(clientSocket, &imgSize, sizeof(int), 0);
-            // for(int i=0; i<clients.size(); i++) {
-            //     if(clients.at(i).type == DESKTOP) {
-            //         send(clients.at(i).liveSocket, &imgSize, sizeof(int), 0);
-            //         recv(clients.at(i).liveSocket, buffer, 3, 0);
-            //     }
-            // }
             
             // send image
             chunkSize = BUFFER_SIZE; // Choose an appropriate chunk size
             for (int i = 0; i <imgSize; i += chunkSize) {
                 int remaining = std::min(chunkSize, imgSize - i);
-                std::cout << "remaining: " << remaining << std::endl;
+                // std::cout << "remaining: " << remaining << std::endl;
                 mainScannerSend(imageBuffer.data() + i, remaining, true);
                 // send(clients.at(0).liveSocket, imageBuffer.data() + i, remaining, 0);
                 // recv(clients.at(0).liveSocket, buffer, BUFFER_SIZE, 0);
@@ -618,33 +686,35 @@ void mainScanner() {
         }
         
         theta = theta + static_cast<double>((360.0 / config.horizontal_precision));
-        std::cout << "counter: " << counter << std::endl;
+        // std::cout << "counter: " << counter << std::endl;
         counter++;
         currentStepNumber = counter;
 
         move(2048 / (int)config.horizontal_precision);
     }
 
-    std::cout << "outside" << std::endl;
+    // std::cout << "outside" << std::endl;
 
     std::fill(buffer.begin(), buffer.end(), '\0');
+    // std::cout << "outside2" << std::endl;
     oss.str("");
+    // std::cout << "outside3" << std::endl;
     oss << "FINISH_SCANNING";
+    // std::cout << "outside4" << std::endl;
     message = oss.str();
+    // std::cout << "outside5" << std::endl;
     std::copy(message.begin(), message.end(), buffer.begin());
+    // std::cout << "outside6" << std::endl;
     mainScannerSend(buffer);
-
-    // memset(buffer, '\0', BUFFER_SIZE);
-    // sprintf(buffer, "FINISH_SCANNING");
-    // // send(clientSocket, buffer, sizeof(buffer), 0);
-    // mainScannerSend(buffer, BUFFER_SIZE);
+    // std::cout << "outside7" << std::endl;
 
     if(!isCancelled) {
-        // memset(buffer, '\0', BUFFER_SIZE);
-        // sprintf(buffer, "%s", "FINISHED");
-        // send(clientSocket, buffer, sizeof(buffer), 0);
+
+        // std::cout << "debug1";
 
         int shortest = meshPoints[distance(lineLength.begin(), max_element(lineLength.begin(), lineLength.end()))].size();
+
+        // std::cout << "debug2";
 
         for (vector<vector<Vertex>>::iterator it = meshPoints.begin(); it != meshPoints.end(); ++it) {
             while (it->size() > shortest) {
@@ -652,98 +722,38 @@ void mainScanner() {
             }
         }
 
-        vector<Vertex> points;
-        vector<Face> faces;
-        vector<int> firstRow;
-        vector<int> prevRow;
-        vector<int> lastVertices;
+        // std::cout << "debug3";
 
-        for (int index = 0; index < meshPoints[0].size(); ++index) {
-            points.push_back(meshPoints[0][index]);
-            firstRow.push_back(index + 1);
-        }
+        Mesh mesh;
+        Mesh meshMobile;
+        int numOfVertices = meshPoints.back().size() * meshPoints.size();
 
-        prevRow = firstRow;
+        // std::cout << "debug4";
+        
+        if(numOfVertices > MOBILE_VERTEX_LIMIT) {
+            // std::cout << "debug" << std::endl;
+            std::vector<std::vector<Vertex>> meshPointsMobile;
+            int itemsToKeep = MOBILE_VERTEX_LIMIT;
 
-        for (int col = 0; col < meshPoints.size(); ++col) {
-            if (col != 0) {
-                int indexS = prevRow.back();
-                vector<int> currentRow;
+            double stepSize = static_cast<double>(numOfVertices) / itemsToKeep;
 
-                for (int point = 0; point < meshPoints[col].size() - 1; ++point) {
-                    int tl = indexS + point + 1;
-                    int bl = tl + 1;
-                    int tr = prevRow[point];
-                    int br = prevRow[point + 1];
-
-                    Face f1(tl, tr, bl);
-                    Face f2(bl, tr, br);
-                    faces.push_back(f1);
-                    faces.push_back(f2);
-
-                    points.push_back(meshPoints[col][point]);
-                    currentRow.push_back(tl);
-
-                    if (point == meshPoints[col].size() - 2) {
-                        points.push_back(meshPoints[col][point + 1]);
-                        currentRow.push_back(bl);
-                    }
-
-                    if (col == meshPoints.size() - 1) {
-                        tr = tl;
-                        br = bl;
-                        tl = firstRow[point];
-                        bl = firstRow[point + 1];
-
-                        Face f3(tl, tr, bl);
-                        Face f4(bl, tr, br);
-                        faces.push_back(f3);
-                        faces.push_back(f4);
-                    }
+            for(int i=0; i<meshPoints.size(); i++) {
+                vector<Vertex> V;
+                for (double j = 0; j < meshPoints.at(i).size(); j += stepSize) {
+                    V.push_back(meshPoints.at(i).at(static_cast<int>(j)));
                 }
-                lastVertices.push_back(prevRow.back());
-                prevRow = currentRow;
+                meshPointsMobile.push_back(V);
             }
+            meshMobile.build(meshPointsMobile);
+            meshMobile.normalize();
         }
+        mesh.build(meshPoints);
+        mesh.normalize();
 
-        for(int i=0; i<lastVertices.size()-1; i++) {
-            faces.push_back(Face(lastVertices.at(0), lastVertices.at(i), lastVertices.at(i+1)));
-        }
-
-        double minValues[3] = {std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()};
-        double maxValues[3] = {-std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity()};
-
-        // Calculate min and max values
-        for (const Vertex& point : points) {
-            double x = point.x, y = point.y, z = point.z;
-            for (int i = 0; i < 3; ++i) {
-                minValues[i] = std::min(minValues[i], std::min({x, y, z}));
-                maxValues[i] = std::max(maxValues[i], std::max({x, y, z}));
-            }
-        }
-
-        // Normalize vertices
-        double ranges[3] = {maxValues[0] - minValues[0], maxValues[1] - minValues[1], maxValues[2] - minValues[2]};
-        for(int i=0; i<points.size(); i++) {
-            points.at(i).x = (points.at(i).x - minValues[0]) / ranges[0];
-            points.at(i).y  = (points.at(i).y - minValues[1]) / ranges[1];
-            points.at(i).z  = (points.at(i).z - minValues[2]) / ranges[2];
-        }
-
-        // create .obj file
-        std::string fileToWrite = "3d.obj";
-        std::ofstream file(fileToWrite);
-
-        if (file.is_open()) {
-            for (Vertex& point : points) {
-                file << point;
-            }
-            for (Face& face : faces) {
-                file << face;
-            }
-            file.close();
-        } else {
-            std::cerr << "Error: Unable to open file for writing." << std::endl;
+        createObjFile(mesh, "3d.obj");
+        if(numOfVertices >= MOBILE_VERTEX_LIMIT) {
+            std::cout << "3dmobile.obj created" << std::endl;
+            createObjFile(meshMobile, "3dmobile.obj");
         }
 
         // Read the contents of the .obj file
@@ -755,46 +765,96 @@ void mainScanner() {
         // Get the content as a string
         std::string objContent = objBuffer.str();
 
+        std::ifstream objFileMobile("3dmobile.obj");
+        std::stringstream objBufferMobile;
+        objBufferMobile << objFileMobile.rdbuf();
+        objFileMobile.close();
+
+        std::string objContentMobile = objBufferMobile.str();
+
         // Send the size of the .obj content to the client
         int objSize = objContent.size();
-        
-        // memset(buffer, '\0', BUFFER_SIZE);
-        // sprintf(buffer, "FILE %d", objSize);
-        // // send(clientSocket, buffer, sizeof(buffer), 0);
-        // mainScannerSend(buffer, BUFFER_SIZE);
+        int objSizeMobile = objContentMobile.size();
 
-        std::fill(buffer.begin(), buffer.end(), '\0');
-        oss.str("");
-        oss << "FILE";
-        oss << " " << objSize;
-        message = oss.str();
-        std::copy(message.begin(), message.end(), buffer.begin());
-        mainScannerSend(buffer);
+        if(numOfVertices < MOBILE_VERTEX_LIMIT) {
+            std::fill(buffer.begin(), buffer.end(), '\0');
+            oss.str("");
+            oss << "FILE";
+            oss << " " << objSize;
+            message = oss.str();
+            std::copy(message.begin(), message.end(), buffer.begin());
+            mainScannerSend(buffer);
+        } else {
+            // std::cout << "test...." << std::endl;
+            std::fill(buffer.begin(), buffer.end(), '\0');
+            oss.str("");
+            oss << "FILE";
+            oss << " " << objSize;
+            message = oss.str();
+            std::copy(message.begin(), message.end(), buffer.begin());
+            mainScannerSend(buffer, DESKTOP);
 
-        // Send the .obj content to the client in packages of size 1024
-        int chunkSize = BUFFER_SIZE;
-        for (int i = 0; i < objSize; i += chunkSize) {
-            int remaining = std::min(chunkSize, objSize - i);
-            mainScannerSend(objContent.c_str() + i, remaining);
-            // send(clients.at(0).liveSocket, objContent.c_str() + i, remaining, 0);
-            // recv(clients.at(0).liveSocket, buffer, BUFFER_SIZE, 0);
+            std::fill(buffer.begin(), buffer.end(), '\0');
+            oss.str("");
+            oss << "FILE";
+            oss << " " << objSizeMobile;
+            message = oss.str();
+            std::copy(message.begin(), message.end(), buffer.begin());
+            mainScannerSend(buffer, MOBILE);
         }
 
-        std::fill(buffer.begin(), buffer.end(), '\0');
-        oss.str("");
-        oss << "FILE_END";
-        oss << " " << objSize;
-        message = oss.str();
-        std::copy(message.begin(), message.end(), buffer.begin());
-        mainScannerSend(buffer);
+        if(numOfVertices < MOBILE_VERTEX_LIMIT) {
+            // Send the .obj content to the client in packages of size 1024
+            int chunkSize = BUFFER_SIZE;
+            for (int i = 0; i < objSize; i += chunkSize) {
+                int remaining = std::min(chunkSize, objSize - i);
+                mainScannerSend(objContent.c_str() + i, remaining);
+                // send(clients.at(0).liveSocket, objContent.c_str() + i, remaining, 0);
+                // recv(clients.at(0).liveSocket, buffer, BUFFER_SIZE, 0);
+            }
+        } else {
+            // Send the .obj content to the client in packages of size 1024
+            int chunkSize = BUFFER_SIZE;
+            for (int i = 0; i < objSize; i += chunkSize) {
+                int remaining = std::min(chunkSize, objSize - i);
+                mainScannerSend(objContent.c_str() + i, remaining, DESKTOP);
+                // send(clients.at(0).liveSocket, objContent.c_str() + i, remaining, 0);
+                // recv(clients.at(0).liveSocket, buffer, BUFFER_SIZE, 0);
+            }
+            for (int i = 0; i < objSizeMobile; i += chunkSize) {
+                int remaining = std::min(chunkSize, objSizeMobile - i);
+                mainScannerSend(objContentMobile.c_str() + i, remaining, MOBILE);
+                // send(clients.at(0).liveSocket, objContent.c_str() + i, remaining, 0);
+                // recv(clients.at(0).liveSocket, buffer, BUFFER_SIZE, 0);
+            }
+        }
 
-        // for(int i=0; i<clients.size(); i++) {
-        //     memset(buffer, '\0', BUFFER_SIZE);
-        //     sprintf(buffer, "FILE_END");
-        //     send(clients.at(i).liveSocket, buffer, strlen(buffer), 0);
-        //     recv(clients.at(i).liveSocket, buffer, BUFFER_SIZE, 0);
-        //     // send(clients.at(i).liveSocket, &objSize, sizeof(int), 0);
-        // }
+        if(numOfVertices < MOBILE_VERTEX_LIMIT) {
+            std::fill(buffer.begin(), buffer.end(), '\0');
+            oss.str("");
+            oss << "FILE_END";
+            oss << " " << objSize;
+            message = oss.str();
+            std::copy(message.begin(), message.end(), buffer.begin());
+            mainScannerSend(buffer);
+        } else {
+            std::fill(buffer.begin(), buffer.end(), '\0');
+            oss.str("");
+            oss << "FILE_END";
+            oss << " " << objSize;
+            message = oss.str();
+            std::copy(message.begin(), message.end(), buffer.begin());
+            mainScannerSend(buffer, DESKTOP);
+
+            std::fill(buffer.begin(), buffer.end(), '\0');
+            oss.str("");
+            oss << "FILE_END";
+            oss << " " << objSizeMobile;
+            message = oss.str();
+            std::copy(message.begin(), message.end(), buffer.begin());
+            mainScannerSend(buffer, MOBILE);
+        }
+
 
         pthread_mutex_lock(&scannerStateMutex);
         scannerState = FINISHED;
@@ -803,6 +863,8 @@ void mainScanner() {
         broadcastMessage("scanner_state FINISHED");
 
         std::cout << "scanning finished inside scanner successfully\n";
+
+        std::cout << "number of vertices: " << numOfVertices << std::endl;
 
     } else {
         std::cout << "scanning has canncelled\n";

@@ -105,8 +105,8 @@ void buttonListener() {
 }
 
 int main() {
-    // signal(SIGTERM, signalCallbackHandler);
-    // signal(SIGINT, signalCallbackHandler);
+    signal(SIGTERM, signalCallbackHandler);
+    signal(SIGINT, signalCallbackHandler);
     wiringPiSetupGpio();
     digitalWrite(LED_PIN_1, LOW);
     digitalWrite(LED_PIN_2, LOW);
@@ -299,7 +299,7 @@ int main() {
         memset(buffer, '\0', BUFFER_SIZE);
         getScannerStateStr(buffer);
         send(serverClientSocket, buffer, BUFFER_SIZE, 0);
-        std::cout << buffer << std::endl;
+        // std::cout << buffer << std::endl;
 
         std::thread t2(handleClientConfigSocket, std::ref(client.serverSocket), std::ref(client.configSocket), std::ref(calibrationImageClientSocket));
         t2.detach();

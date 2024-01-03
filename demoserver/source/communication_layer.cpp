@@ -46,7 +46,7 @@ void handleClientConfigSocket(int serverSocket, int configSocket, int calibratio
             break;
         }
 
-        std::cout << buffer << std::endl;
+        // std::cout << buffer << std::endl;
         readConfigurationsFile("configurations.txt", config);
 
         memset(tmpBuffer, '\0', BUFFER_SIZE);
@@ -72,7 +72,7 @@ void handleClientConfigSocket(int serverSocket, int configSocket, int calibratio
             broadcastMessage(tmpBuffer);
         } else if(strcmp(token, "command") == 0) {
             token = strtok(NULL, " ");
-            std::cout << token << std::endl;
+            // std::cout << token << std::endl;
             if(strcmp(token, "cancel") == 0) {
                 pthread_mutex_lock(&scannerStateMutex);
                 scannerState = CANCELLED;
@@ -116,7 +116,7 @@ void broadcastMessage(const char* message) {
         memset(buffer, '\0', BUFFER_SIZE);
         strncpy(buffer, message, BUFFER_SIZE-1);
         // sprintf(buffer, "%s", message);
-        std::cout << "broadcastmessage: " << buffer << std::endl;
+        // std::cout << "broadcastmessage: " << buffer << std::endl;
         send(clients.at(i).broadcastSocket, buffer, strlen(buffer), 0);
     }
 }
@@ -146,7 +146,7 @@ void handleClient(int& serverSocket) {
             tScanner.join();
             break;
         }
-        std::cout << "scanning has finished\n";
+        // std::cout << "scanning has finished\n";
     }
 
 }

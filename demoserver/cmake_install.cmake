@@ -1,4 +1,4 @@
-# Install script for directory: /home/barisayyildiz/cse396-codes/demoserver
+# Install script for directory: /home/group8/Desktop/cse396-codes/baris/demoserver
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/barisayyildiz/cse396-codes/demoserver/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/group8/Desktop/cse396-codes/baris/demoserver/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
