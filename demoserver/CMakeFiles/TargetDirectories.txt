@@ -1,3 +1,0 @@
-/home/group8/Desktop/cse396-codes/baris/demoserver/CMakeFiles/rebuild_cache.dir
-/home/group8/Desktop/cse396-codes/baris/demoserver/CMakeFiles/edit_cache.dir
-/home/group8/Desktop/cse396-codes/baris/demoserver/CMakeFiles/test.dir

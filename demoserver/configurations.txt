@@ -1,4 +1,0 @@
-horizontal_precision 8
-vertical_precision 19
-top_left 392.000000 154.000000
-bottom_right 671.000000 636.000000
