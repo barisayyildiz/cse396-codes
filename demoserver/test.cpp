@@ -38,6 +38,7 @@ void signalCallbackHandler(int signum) {
         close(clients.at(i).calibrationImageSocket);
         close(clients.at(i).liveSocket);
     }
+    std::cout << "caught signal2\n";
     close(serverSocketId);
     close(configSocketId);
     close(broadcastSocketId);

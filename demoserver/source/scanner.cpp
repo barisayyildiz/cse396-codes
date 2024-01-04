@@ -543,6 +543,19 @@ void mainScanner() {
         save_path = "imgs_db/red_line/" + std::to_string(counter) + ".jpg";
         cv::imwrite(save_path, backG*255);
 
+        if(counter == 0) {
+            int cIndex = 0;
+            for (int r = 0; r < h; r++) {
+                for (int c = 0; c < w; c++) {
+                    if (backG.at<uchar>(r, c) == 1 && c > cIndex) {
+                        cIndex = c;
+                    }
+                }
+            }
+            centerC = cIndex + 40;
+            std::cout << "centerC: " << centerC << std::endl;
+        }
+
         for (int r = 0; r < h; r++) {
             int cIndex = 0;
             for (int c = 0; c < w; c++) {

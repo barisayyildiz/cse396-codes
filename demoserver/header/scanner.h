@@ -146,9 +146,9 @@ class Mesh {
                             faces.push_back(f4);
                         }
                     }
-                    lastVertices.push_back(prevRow.back());
                     prevRow = currentRow;
                 }
+                lastVertices.push_back(prevRow.back());
             }
 
             for(int i=0; i<lastVertices.size()-1; i++) {
