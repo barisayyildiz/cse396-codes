@@ -5,7 +5,7 @@
         "name": "C++ Debug",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/converter/test", // Update with your actual executable name
+        "program": "${workspaceFolder}/demoserver/test", // Update with your actual executable name
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",

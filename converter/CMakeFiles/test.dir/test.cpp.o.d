@@ -410,4 +410,5 @@ CMakeFiles/test.dir/test.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
  /usr/include/x86_64-linux-gnu/bits/signal_ext.h \
  /home/barisayyildiz/cse396-codes/converter/header/scanner.h \
+ /usr/include/x86_64-linux-gnu/sys/wait.h \
  /home/barisayyildiz/cse396-codes/converter/header/communication_layer.h

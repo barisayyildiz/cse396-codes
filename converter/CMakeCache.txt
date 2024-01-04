@@ -221,6 +221,9 @@ Scanner_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 Scanner_SOURCE_DIR:STATIC=/home/barisayyildiz/cse396-codes/converter
 
+//Path to a library.
+WIRINGPI_LIBRARY:FILEPATH=WIRINGPI_LIBRARY-NOTFOUND
+
 
 ########################
 # INTERNAL cache entries

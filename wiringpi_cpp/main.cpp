@@ -114,9 +114,6 @@ void oneStep(bool direction){
   }
 }
 
-// #include <wiringPi.h>
-// #include <stdio.h>
-
 // int main() {
 
 //     int pinNumber = 18; // Replace with the GPIO pin number you want to use

@@ -1,4 +1,5 @@
 import cv2
+import sys
 # from picamera import PiCamera
 
 # Open the default camera (you can specify a different camera index if needed)
@@ -28,7 +29,7 @@ while True:
     # camera.close()
     # frame = cv2.imread('lineDetection.jpg')
     # frame = cv2.imread(f"imgs/original/{0}.jpg")
-    frame = cv2.imread(f"imgs_db/original/{0}.jpg")
+    frame = cv2.imread(f"imgs/{sys.argv[1]}/{0}.jpg")
 
     # Calculate the scale factor
     scale_factor = target_width / frame.shape[1]

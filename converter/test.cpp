@@ -150,7 +150,7 @@ int main() {
         for(int i=0; i<h; i++) {
             int max = -1;
             int cIndex = -1;
-            for(int j=0; j<centerC; j++) {
+            for(int j=0; j<w; j++) {
                 int current = cropped.at<cv::Vec3b>(i, j)[2];
                 if(current > max) {
                     cIndex = j;
