@@ -1,3 +1,0 @@
-/home/barisayyildiz/cse396-codes/converter/CMakeFiles/test.dir
-/home/barisayyildiz/cse396-codes/converter/CMakeFiles/edit_cache.dir
-/home/barisayyildiz/cse396-codes/converter/CMakeFiles/rebuild_cache.dir

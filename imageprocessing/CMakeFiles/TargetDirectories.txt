@@ -1,3 +1,0 @@
-/home/barisayyildiz/cse396-codes/imageprocessing/CMakeFiles/test.dir
-/home/barisayyildiz/cse396-codes/imageprocessing/CMakeFiles/edit_cache.dir
-/home/barisayyildiz/cse396-codes/imageprocessing/CMakeFiles/rebuild_cache.dir
