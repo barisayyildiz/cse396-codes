@@ -17,7 +17,7 @@
 // for signal handling
 #include <signal.h>
 
-// #include <wiringPi.h>
+#include <wiringPi.h>
 
 #include <chrono>
 #include "header/scanner.h"
