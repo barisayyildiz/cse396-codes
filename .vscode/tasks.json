@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-g",
+                "${workspaceFolder}/demoserver/test.cpp",
+                "${workspaceFolder}/demoserver/source/scanner.cpp",
+                "${workspaceFolder}/demoserver/source/communication_layer.cpp",
+                "-o",
+                "${workspaceFolder}/demoserver/test",
+                "-I/usr/local/include/opencv4",
+                "-L/usr/local/lib",
+                "-lopencv_core",
+                "-lopencv_highgui",
+                "-lopencv_imgproc",
+                "-lopencv_imgcodecs"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
