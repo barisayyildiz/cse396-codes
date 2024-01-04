@@ -13,4 +13,3 @@ raspicam_cpp/*
 wiringpi_cpp/*
 *.jpg
 *.py
-*.cpp

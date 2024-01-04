@@ -1,19 +1,16 @@
+
+# Consider dependencies only in project.
+set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
+
 # The set of languages for which implicit dependencies are needed:
 set(CMAKE_DEPENDS_LANGUAGES
-  "CXX"
   )
-# The set of files for implicit dependencies of each language:
-set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/group8/Desktop/cse396-codes/baris/demoserver/source/communication_layer.cpp" "/home/group8/Desktop/cse396-codes/baris/demoserver/CMakeFiles/test.dir/source/communication_layer.cpp.o"
-  "/home/group8/Desktop/cse396-codes/baris/demoserver/source/scanner.cpp" "/home/group8/Desktop/cse396-codes/baris/demoserver/CMakeFiles/test.dir/source/scanner.cpp.o"
-  "/home/group8/Desktop/cse396-codes/baris/demoserver/test.cpp" "/home/group8/Desktop/cse396-codes/baris/demoserver/CMakeFiles/test.dir/test.cpp.o"
-  )
-set(CMAKE_CXX_COMPILER_ID "GNU")
 
-# The include file search paths:
-set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "header"
-  "/usr/include/opencv4"
+# The set of dependency files which are needed:
+set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/barisayyildiz/cse396-codes/demoserver/source/communication_layer.cpp" "CMakeFiles/test.dir/source/communication_layer.cpp.o" "gcc" "CMakeFiles/test.dir/source/communication_layer.cpp.o.d"
+  "/home/barisayyildiz/cse396-codes/demoserver/source/scanner.cpp" "CMakeFiles/test.dir/source/scanner.cpp.o" "gcc" "CMakeFiles/test.dir/source/scanner.cpp.o.d"
+  "/home/barisayyildiz/cse396-codes/demoserver/test.cpp" "CMakeFiles/test.dir/test.cpp.o" "gcc" "CMakeFiles/test.dir/test.cpp.o.d"
   )
 
 # Targets to which this target links.
