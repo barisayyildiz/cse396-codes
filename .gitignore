@@ -4,7 +4,7 @@ embed_code_test_python/*
 file_server/*
 gpio_python/*
 hardware/*
-image_processing/*
+imageprocessing/*
 live_charts/*
 normalization/*
 opencv_test/*
