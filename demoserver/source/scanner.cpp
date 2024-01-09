@@ -552,7 +552,7 @@ void mainScanner() {
                     }
                 }
             }
-            centerC = cIndex + 20;
+            centerC = cIndex + 40;
             std::cout << "centerC: " << centerC << std::endl;
         }
 
@@ -703,7 +703,7 @@ void mainScanner() {
         counter++;
         currentStepNumber = counter;
 
-        // move(2048 / (int)config.horizontal_precision);
+        move(2048 / (int)config.horizontal_precision);
     }
 
     // std::cout << "outside" << std::endl;
