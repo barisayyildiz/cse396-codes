@@ -1,0 +1,46 @@
+name: "Scanner3D"
+description: "Application to communicate with hardware."
+
+publish_to: 'none' 
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  lottie: ^2.7.0
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.1
+  socket_io_client: ^2.0.3+1
+  provider: ^6.1.1
+  flutter_cube: ^0.1.1
+  flutter_3d_viewer: ^1.0.0
+  object_3d: ^0.0.1
+  flutter_local_notifications: ^16.2.0
+  sqflite: ^2.0.0
+  path: ^1.8.3
+  ffi: ^2.1.0
+  flex_color_picker: ^3.3.0
+  permission_handler: ^11.1.0
+  file_selector: ^1.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: scanner
+      fonts:
+        - asset: assets/fonts/scanner.ttf
+
+  assets:
+    - assets/animations/
+    - assets/fonts/
+    - assets/
