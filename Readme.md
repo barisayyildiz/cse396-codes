@@ -1,5 +1,3 @@
-# [Desktop kodu](https://github.com/barisayyildiz/cse396-desktop)
-
 ### Wiringpi çalıştırma
 
 ```
